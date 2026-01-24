@@ -1,4 +1,4 @@
-# AgriMart - Agricultural Marketplace Platform
+# AgriConnect - Agricultural Marketplace Platform
 
 A comprehensive full-stack MERN application connecting farmers, wholesalers, and consumers through a digital agricultural marketplace.
 
@@ -302,6 +302,3 @@ For support, email support@agrimart.com or create an issue in the repository.
 - Built for connecting the agricultural ecosystem
 - Inspired by the need for fair pricing and transparency in agriculture
 - Designed to empower farmers and improve supply chain efficiency
-#   A g r i C o n n e c t 
- 
- 
