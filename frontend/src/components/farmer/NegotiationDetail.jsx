@@ -185,17 +185,22 @@ const NegotiationDetail = () => {
                     </div>
 
                     {/* Current Offer */}
-                    {negotiation.currentOffer && (
+                    {negotiation.currentOffer ? (
                         <div className="card" style={{ background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05))' }}>
                             <h3 className="mb-4">Current Offer</h3>
                             <div className="text-center">
                                 <div style={{ fontSize: 'var(--font-size-4xl)', fontWeight: 700, color: 'var(--primary-green)', marginBottom: 'var(--spacing-2)' }}>
-                                    {formatPrice(negotiation.currentOffer.amount)}
+                                    {formatPrice(negotiation.currentOffer.amount || 0)}
                                 </div>
                                 <p style={{ color: 'var(--gray-600)' }}>
                                     per quintal • Offered by {negotiation.currentOffer.offeredBy === 'farmer' ? 'You' : wholesaler?.name}
                                 </p>
                             </div>
+                        </div>
+                    ) : (
+                        <div className="card">
+                            <h3 className="mb-4">Current Offer</h3>
+                            <p>No active offer.</p>
                         </div>
                     )}
 

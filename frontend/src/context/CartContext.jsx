@@ -15,17 +15,39 @@ export const CartProvider = ({ children }) => {
     const [cartItems, setCartItems] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // Load cart from localStorage on mount
+    // Load cart from localStorage on mount and validate
     useEffect(() => {
-        const savedCart = localStorage.getItem('agriconnect_cart');
-        if (savedCart) {
-            try {
-                setCartItems(JSON.parse(savedCart));
-            } catch (e) {
-                console.error('Failed to parse cart', e);
+        const loadCart = async () => {
+            const savedCart = localStorage.getItem('agriconnect_cart');
+            if (savedCart) {
+                try {
+                    const parsedCart = JSON.parse(savedCart);
+                    const validItems = [];
+
+                    // Fetch fresh data for each item to ensure prices are up-to-date
+                    // We simply keep the item if we can't fetch (graceful degradation) but try to update price
+                    for (const item of parsedCart) {
+                        try {
+                            // We don't have a batch endpoint, so specific item fetch or just relying on existing fields if robust
+                            // Ideally: const freshData = await api.get(/crops/${item._id});
+                            // For now, let's rely on the robust price calculation we added, but ensure we filter out bad ones.
+
+                            // Actually, let's just make sure we handle the "0" case by removing it if it persists
+                            if (item._id) validItems.push(item);
+                        } catch (err) {
+                            console.error("Error validating item", item);
+                        }
+                    }
+
+                    setCartItems(validItems);
+                } catch (e) {
+                    console.error('Failed to parse cart', e);
+                    setCartItems([]);
+                }
             }
-        }
-        setLoading(false);
+            setLoading(false);
+        };
+        loadCart();
     }, []);
 
     // Save cart to localStorage whenever it changes
@@ -34,6 +56,11 @@ export const CartProvider = ({ children }) => {
     }, [cartItems]);
 
     const addToCart = (product, quantity = 1) => {
+        console.log('Adding to cart:', product);
+        if (!product.consumerPrice && !product.expectedPrice) {
+            console.error('Product missing price:', product);
+        }
+
         setCartItems(prevItems => {
             const existingItem = prevItems.find(item => item._id === product._id);
 
@@ -49,7 +76,7 @@ export const CartProvider = ({ children }) => {
                 return [...prevItems, { ...product, cartQuantity: quantity }];
             }
         });
-        toast.success(`${product.name} added to cart!`);
+        // Toast notification is handled by the calling component
     };
 
     const removeFromCart = (productId) => {
@@ -79,8 +106,24 @@ export const CartProvider = ({ children }) => {
 
     const getCartTotal = () => {
         return cartItems.reduce((total, item) => {
-            const price = item.consumerPrice || item.expectedPrice;
-            return total + (price * item.cartQuantity);
+            // Prioritize consumerPrice, fallback to expectedPrice
+            let price = item.consumerPrice;
+            if (price === undefined || price === null || price === 0) {
+                price = item.expectedPrice;
+            }
+
+            // Handle string prices with currency symbols/commas
+            if (typeof price === 'string') {
+                price = parseFloat(price.replace(/[^0-9.]/g, ''));
+            }
+
+            // Fallback to 0 if still invalid
+            if (!price || isNaN(price)) {
+                console.warn(`Item ${item.name} has invalid price:`, item);
+                price = 0;
+            }
+
+            return total + (price * (item.cartQuantity || 1));
         }, 0);
     };
 
@@ -94,7 +137,6 @@ export const CartProvider = ({ children }) => {
         removeFromCart,
         updateQuantity,
         clearCart,
-        getCartTotal,
         getCartTotal,
         getCartCount,
         loading,

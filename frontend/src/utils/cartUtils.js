@@ -112,8 +112,18 @@ export const getCartCount = () => {
 export const getCartSubtotal = () => {
     const cart = getCart();
     return cart.reduce((total, item) => {
-        const price = item.consumerPrice || 0;
-        return total + (price * item.cartQuantity);
+        // Robust price calculation - handle strings with commas/symbols
+        const parsePrice = (priceStr) => {
+            if (typeof priceStr === 'number') return priceStr;
+            if (!priceStr) return 0;
+            // Remove invalid characters locally in scope
+            const cleanStr = priceStr.toString().replace(/[^0-9.]/g, '');
+            return parseFloat(cleanStr) || 0;
+        };
+
+        const price = parsePrice(item.consumerPrice) || parsePrice(item.expectedPrice) || 0;
+        const quantity = parseInt(item.cartQuantity) || 1;
+        return total + (price * quantity);
     }, 0);
 };
 
@@ -121,9 +131,7 @@ export const getCartSubtotal = () => {
  * Calculate delivery charges based on cart total
  */
 export const calculateDeliveryCharges = (subtotal) => {
-    if (subtotal >= 1000) return 0; // Free delivery above ₹1000
-    if (subtotal >= 500) return 40;
-    return 60;
+    return 0; // Free delivery for all orders
 };
 
 /**

@@ -7,63 +7,116 @@ import Negotiation from '../models/Negotiation.js';
 // @access  Private (Wholesaler or Consumer)
 export const placeOrder = async (req, res) => {
     try {
-        const {
-            cropId,
-            negotiationId,
-            quantity,
-            pricePerUnit,
-            deliveryAddress,
-            paymentMethod,
-        } = req.body;
+        const { items, deliveryAddress, paymentMethod } = req.body;
 
-        // Check if crop exists
-        const crop = await Crop.findById(cropId);
-        if (!crop) {
-            return res.status(404).json({ message: 'Crop not found' });
-        }
-
-        // Calculate total amount
-        const totalAmount = pricePerUnit * quantity.value;
-
-        // Determine buyer type
+        // Determine buyer
+        const buyer = req.user._id;
         const buyerType = req.user.role === 'wholesaler' ? 'wholesaler' : 'consumer';
 
-        // Create order
-        const order = await Order.create({
-            buyer: req.user._id,
-            buyerType,
-            seller: crop.farmer,
-            crop: cropId,
-            negotiation: negotiationId,
-            quantity,
-            pricePerUnit,
-            totalAmount,
-            deliveryAddress,
-            paymentMethod: paymentMethod || 'cod',
-            statusHistory: [
-                {
-                    status: 'placed',
-                    timestamp: new Date(),
-                    notes: 'Order placed successfully',
-                },
-            ],
-        });
+        // Normalize items: If single item (from negotiation), wrap in array. If cart items, use as is.
+        // Cart item structure: { cropId, quantity }
+        // Negotiation item structure: { cropId, negotiationId, quantity, pricePerUnit }
 
-        // Update crop status if fully sold
-        if (quantity.value >= crop.quantity.value) {
-            crop.status = 'sold';
-            await crop.save();
+        let orderItems = [];
+        if (items && Array.isArray(items)) {
+            orderItems = items;
+        } else {
+            // Handle single item request (backward compatibility)
+            orderItems = [{
+                cropId: req.body.cropId,
+                negotiationId: req.body.negotiationId,
+                quantity: req.body.quantity,
+                pricePerUnit: req.body.pricePerUnit
+            }];
         }
 
-        const populatedOrder = await Order.findById(order._id)
-            .populate('buyer', 'name phone email')
-            .populate('seller', 'name phone email address')
-            .populate('crop', 'name category season images');
+        const createdOrders = [];
+
+        for (const item of orderItems) {
+            const crop = await Crop.findById(item.cropId);
+            if (!crop) continue; // Skip if crop not found
+
+            // Resolve Price: Explicit (negotiation) or Market (crop price)
+            let finalPricePerUnit = item.pricePerUnit;
+            if (!finalPricePerUnit) {
+                // Clean price string if from crop data
+                // FIX: Use consumerPrice or expectedPrice as per schema
+                const rawPrice = buyerType === 'consumer'
+                    ? (crop.consumerPrice || crop.expectedPrice)
+                    : crop.expectedPrice;
+
+                if (typeof rawPrice === 'number') {
+                    finalPricePerUnit = rawPrice;
+                } else {
+                    finalPricePerUnit = parseFloat(rawPrice?.toString().replace(/[^0-9.]/g, '') || 0);
+                }
+            }
+
+            // Quantity value check (if object vs number)
+            const qtyValue = (item.quantity && typeof item.quantity === 'object') ? item.quantity.value : item.quantity;
+
+            if (!qtyValue || isNaN(qtyValue)) {
+                console.error(`Invalid quantity for item: ${item.cropId}`, item.quantity);
+                continue;
+            }
+
+            // Calculate Total
+            const totalAmount = finalPricePerUnit * qtyValue;
+
+            if (isNaN(totalAmount) || totalAmount < 0) {
+                console.error(`Invalid total amount for item: ${item.cropId}, Price: ${finalPricePerUnit}, Qty: ${qtyValue}`);
+                continue;
+            }
+
+            if (!crop.farmer) {
+                console.error(`Crop ${item.cropId} has no farmer assigned`);
+                continue;
+            }
+
+            const newOrder = await Order.create({
+                buyer,
+                buyerType,
+                seller: crop.farmer,
+                crop: crop._id,
+                negotiation: item.negotiationId,
+                quantity: { value: qtyValue, unit: crop.quantity.unit || 'kg' }, // Ensure quantity object structure
+                pricePerUnit: finalPricePerUnit,
+                totalAmount,
+                deliveryAddress,
+                paymentMethod: paymentMethod || 'cod',
+                statusHistory: [{
+                    status: 'placed',
+                    timestamp: new Date(),
+                    notes: 'Order placed successfully'
+                }]
+            });
+
+            // Update stock (simple decrement for now, can be improved)
+            // Note: assuming quantity.value is the stock tracking unit
+            if (crop.quantity.value >= qtyValue) {
+                crop.quantity.value -= qtyValue;
+                if (crop.quantity.value <= 0) {
+                    crop.status = 'sold';
+                }
+                await crop.save();
+            }
+
+            createdOrders.push(newOrder);
+        }
+
+        if (createdOrders.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Failed to create order. Please check item availability and prices.'
+            });
+        }
 
         res.status(201).json({
             success: true,
-            data: populatedOrder,
+            count: createdOrders.length,
+            data: createdOrders // Return array of orders
         });
+
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error', error: error.message });

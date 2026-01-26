@@ -28,6 +28,8 @@ const CropListing = () => {
         organicCertified: false,
         harvestDate: '',
     });
+    const [images, setImages] = useState([]);
+    const [imagePreviews, setImagePreviews] = useState([]);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -52,6 +54,34 @@ const CropListing = () => {
         }
     };
 
+    const handleImageChange = (e) => {
+        const files = Array.from(e.target.files);
+
+        if (files.length === 0) return;
+
+        // Validate file types
+        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        const invalidFiles = files.filter(file => !validTypes.includes(file.type));
+
+        if (invalidFiles.length > 0) {
+            toast.error('Please upload only JPG, PNG, or WebP images');
+            return;
+        }
+
+        // Validate file sizes (max 5MB each)
+        const oversizedFiles = files.filter(file => file.size > 5 * 1024 * 1024);
+        if (oversizedFiles.length > 0) {
+            toast.error('Each image must be less than 5MB');
+            return;
+        }
+
+        setImages(files);
+
+        // Generate previews
+        const previews = files.map(file => URL.createObjectURL(file));
+        setImagePreviews(previews);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -60,10 +90,36 @@ const CropListing = () => {
             return;
         }
 
+        if (images.length === 0) {
+            toast.error('Please upload at least one image of your crop');
+            return;
+        }
+
         setLoading(true);
 
         try {
-            await api.post('/crops', formData);
+            const submitData = new FormData();
+
+            // Append form data
+            Object.keys(formData).forEach(key => {
+                if (key === 'quantity' || key === 'location') {
+                    submitData.append(key, JSON.stringify(formData[key]));
+                } else {
+                    submitData.append(key, formData[key]);
+                }
+            });
+
+            // Append images
+            images.forEach((image, index) => {
+                submitData.append('images', image);
+            });
+
+            await api.post('/crops', submitData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+
             toast.success('Crop listed successfully! Waiting for admin approval.');
             navigate('/farmer');
         } catch (error) {
@@ -169,7 +225,7 @@ const CropListing = () => {
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="form-group">
-                            <label className="form-label">Expected Price (₹) *</label>
+                            <label className="form-label">Wholesale Price (Expected) (₹) *</label>
                             <input
                                 type="number"
                                 name="expectedPrice"
@@ -267,6 +323,41 @@ const CropListing = () => {
                             value={formData.harvestDate}
                             onChange={handleChange}
                         />
+                    </div>
+
+                    <div className="form-group">
+                        <label className="form-label">Crop Images * (Required)</label>
+                        <input
+                            type="file"
+                            className="form-input"
+                            accept="image/jpeg,image/jpg,image/png,image/webp"
+                            multiple
+                            onChange={handleImageChange}
+                            required
+                        />
+                        <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--gray-600)', marginTop: 'var(--spacing-2)' }}>
+                            Upload clear images of your crop (JPG, PNG, or WebP, max 5MB each)
+                        </p>
+
+                        {imagePreviews.length > 0 && (
+                            <div className="flex gap-3 mt-4" style={{ flexWrap: 'wrap' }}>
+                                {imagePreviews.map((preview, index) => (
+                                    <div key={index} style={{ position: 'relative' }}>
+                                        <img
+                                            src={preview}
+                                            alt={`Preview ${index + 1}`}
+                                            style={{
+                                                width: '120px',
+                                                height: '120px',
+                                                objectFit: 'cover',
+                                                borderRadius: 'var(--radius-md)',
+                                                border: '2px solid var(--gray-200)',
+                                            }}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     <div className="form-group">

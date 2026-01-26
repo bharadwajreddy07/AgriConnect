@@ -40,7 +40,7 @@ const ShoppingCart = () => {
     };
 
     const subtotal = getCartTotal();
-    const delivery = subtotal >= 1000 ? 0 : 50;
+    const delivery = 0; // Free delivery for all orders
     const tax = subtotal * 0.05;
     const total = subtotal + delivery + tax;
 
@@ -109,12 +109,16 @@ const ShoppingCart = () => {
                                             }}
                                         >
                                             <img
-                                                src={item.images?.[0] || `https://images.unsplash.com/photo-1${Math.floor(Math.random() * 1000000000)}?w=200&h=200&fit=crop`}
+                                                src={item.images?.[0] || '/images/crops/paddy.png'}
                                                 alt={item.name}
                                                 style={{
                                                     width: '100%',
                                                     height: '100%',
                                                     objectFit: 'cover',
+                                                }}
+                                                onError={(e) => {
+                                                    e.target.onerror = null;
+                                                    e.target.src = '/images/crops/paddy.png'; // Fallback to paddy if image fails
                                                 }}
                                             />
                                         </div>

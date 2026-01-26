@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
 import { toast } from 'react-toastify';
-import { FaShoppingCart, FaHeart, FaStar, FaLeaf, FaFilter, FaSearch } from 'react-icons/fa';
-import { addToCart as addToCartUtil, getCartCount, formatPrice } from '../../utils/cartUtils';
+import { FaSearch, FaFilter, FaLeaf, FaShoppingCart } from 'react-icons/fa';
+import { useCart } from '../../context/CartContext';
+import { formatPrice, getCropImage } from '../../utils/cropData';
 
 const ConsumerMarketplace = () => {
     const [crops, setCrops] = useState([]);
@@ -206,7 +207,7 @@ const ConsumerMarketplace = () => {
                                 {/* Image */}
                                 <div style={{ position: 'relative', height: '200px', overflow: 'hidden' }}>
                                     <img
-                                        src={crop.images?.[0] || `https://images.unsplash.com/photo-1${Math.floor(Math.random() * 1000000000)}?w=400&h=300&fit=crop`}
+                                        src={crop.images?.[0] || getCropImage(crop.name) || '/placeholder.jpg'}
                                         alt={crop.name}
                                         style={{
                                             width: '100%',

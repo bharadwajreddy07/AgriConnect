@@ -268,14 +268,14 @@ const Home = () => {
 
                     <div className="grid grid-cols-4 gap-6">
                         {[
-                            { name: 'Paddy', image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=800&q=80', season: 'Kharif', price: '2,500', location: 'Punjab' },
-                            { name: 'Maize', image: 'https://images.unsplash.com/photo-1551754655-cd27e38d2076?w=800&q=80', season: 'Kharif', price: '1,800', location: 'Karnataka' },
-                            { name: 'Pulses', image: 'https://images.unsplash.com/photo-1610988924854-e3c2f8c4d9a2?w=800&q=80', season: 'Rabi', price: '6,500', location: 'Maharashtra' },
-                            { name: 'Cotton', image: 'https://images.unsplash.com/photo-1615485500834-bc10199bc727?w=800&q=80', season: 'Kharif', price: '5,200', location: 'Gujarat' },
-                            { name: 'Wheat', image: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=800&q=80', season: 'Rabi', price: '2,100', location: 'Haryana' },
-                            { name: 'Sugarcane', image: 'https://images.unsplash.com/photo-1583484963886-cfe2a9a8c3ce?w=800&q=80', season: 'Year-Round', price: '3,200', location: 'Uttar Pradesh' },
-                            { name: 'Tomatoes', image: 'https://images.unsplash.com/photo-1546470427-227a4e2c2f0f?w=800&q=80', season: 'Zaid', price: '4,500', location: 'Tamil Nadu' },
-                            { name: 'Bananas', image: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=800&q=80', season: 'Year-Round', price: '3,800', location: 'Kerala' },
+                            { name: 'Paddy', image: '/images/crops/paddy.png', season: 'Kharif', price: '2,500', location: 'Punjab' },
+                            { name: 'Maize', image: '/images/crops/maize.png', season: 'Kharif', price: '1,800', location: 'Karnataka' },
+                            { name: 'Pulses', image: '/images/crops/pulses.png', season: 'Rabi', price: '6,500', location: 'Maharashtra' },
+                            { name: 'Turmeric', image: '/images/crops/turmeric.png', season: 'Kharif', price: '5,200', location: 'Gujarat' },
+                            { name: 'Wheat', image: '/images/crops/wheat.png', season: 'Rabi', price: '2,100', location: 'Haryana' },
+                            { name: 'Sugarcane', image: '/images/crops/sugarcane.png', season: 'Year-Round', price: '3,200', location: 'Uttar Pradesh' },
+                            { name: 'Tomatoes', image: '/images/crops/tomatoes.png', season: 'Zaid', price: '4,500', location: 'Tamil Nadu' },
+                            { name: 'Bananas', image: '/images/crops/bananas.png', season: 'Year-Round', price: '3,800', location: 'Kerala' },
                         ].map((crop, index) => (
                             <div key={index} className="crop-card hover-3d">
                                 <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 'var(--radius-2xl) var(--radius-2xl) 0 0' }}>
@@ -400,74 +400,6 @@ const Home = () => {
                 </div>
             </section>
 
-            {/* Testimonials Section */}
-            <section style={{ padding: '6rem 0', background: 'white' }}>
-                <div className="container">
-                    <div style={{ textAlign: 'center', marginBottom: 'var(--spacing-12)' }}>
-                        <h2 className="gradient-text" style={{ fontSize: 'var(--font-size-4xl)', marginBottom: 'var(--spacing-3)' }}>
-                            Trusted by Thousands
-                        </h2>
-                        <p style={{ color: 'var(--gray-600)', fontSize: 'var(--font-size-lg)' }}>
-                            See what our users have to say
-                        </p>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-6">
-                        {[
-                            {
-                                name: 'Ramesh Kumar',
-                                role: 'Farmer, Punjab',
-                                image: 'https://images.unsplash.com/photo-1595152772835-219674b2a8a6?w=150&h=150&fit=crop',
-                                rating: 5,
-                                text: 'AgriConnect helped me get 30% better prices for my wheat crop. Direct connection with wholesalers changed everything!',
-                            },
-                            {
-                                name: 'Priya Sharma',
-                                role: 'Wholesaler, Delhi',
-                                image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop',
-                                rating: 5,
-                                text: 'Quality samples before bulk orders saved me from bad deals. The negotiation system is transparent and fair.',
-                            },
-                            {
-                                name: 'Suresh Patel',
-                                role: 'Consumer, Mumbai',
-                                image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop',
-                                rating: 5,
-                                text: 'Fresh vegetables directly from farmers at reasonable prices. The tracking system gives me peace of mind.',
-                            },
-                        ].map((testimonial, index) => (
-                            <div key={index} className="card-premium">
-                                <div className="flex gap-4 mb-4">
-                                    <img
-                                        src={testimonial.image}
-                                        alt={testimonial.name}
-                                        style={{
-                                            width: '60px',
-                                            height: '60px',
-                                            borderRadius: '50%',
-                                            objectFit: 'cover',
-                                        }}
-                                    />
-                                    <div>
-                                        <h5 style={{ marginBottom: 'var(--spacing-1)' }}>{testimonial.name}</h5>
-                                        <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--gray-600)' }}>
-                                            {testimonial.role}
-                                        </p>
-                                        <div className="flex gap-1 mt-2">
-                                            {[...Array(testimonial.rating)].map((_, i) => (
-                                                <FaStar key={i} style={{ color: '#fbbf24', fontSize: '0.9rem' }} />
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-                                <p style={{ color: 'var(--gray-700)', fontSize: 'var(--font-size-sm)', fontStyle: 'italic' }}>
-                                    "{testimonial.text}"
-                                </p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
 
             {/* CTA Section */}
             <section
@@ -520,6 +452,8 @@ const Home = () => {
                     </Link>
                 </div>
             </section>
+
+
 
             {/* Footer */}
             <footer style={{ background: 'var(--gray-900)', color: 'white', padding: '3rem 0 2rem' }}>

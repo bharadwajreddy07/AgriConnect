@@ -108,14 +108,15 @@ export const placeConsumerOrder = async (req, res) => {
                 });
             }
 
-            const itemTotal = crop.consumerPrice * item.quantity;
+            const itemPrice = crop.consumerPrice || crop.expectedPrice || 0;
+            const itemTotal = itemPrice * item.quantity;
             totalAmount += itemTotal;
 
             orderItems.push({
                 crop: crop._id,
                 farmer: crop.farmer,
                 quantity: item.quantity,
-                price: crop.consumerPrice,
+                price: itemPrice,
                 total: itemTotal,
             });
 

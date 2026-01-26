@@ -16,6 +16,7 @@ import {
     clearCart as utilsClearCart,
     validateCart,
 } from '../../utils/cartUtils';
+import { getCropImage } from '../../utils/cropData';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 
@@ -60,6 +61,15 @@ const Checkout = () => {
     const [agreedToTerms, setAgreedToTerms] = useState(false);
 
     // Initialize Cart
+    useEffect(() => {
+        // Hotfix: Check for stale data (zero price) and warn/clear
+        if (cart.length > 0 && cart.some(item => !item.consumerPrice && !item.expectedPrice)) {
+            console.warn('Stale cart data detected (missing price). Clearing cart.');
+            contextClearCart();
+            toast.info('Cart cleared due to product updates. Please add items again.');
+        }
+    }, [cart]);
+
     useEffect(() => {
         if (!cartLoading && contextCartItems.length === 0) {
             toast.error('Your cart is empty');
@@ -127,25 +137,8 @@ const Checkout = () => {
             return;
         }
 
-        if (paymentMethod === 'online') {
-            // Mock Razorpay Payment Flow
-            setLoading(true);
-            toast.info('Opening Secure Payment Gateway...', { autoClose: 2000 });
-
-            setTimeout(() => {
-                const isSuccess = window.confirm('Mock Razorpay: Simulate Successful Payment?');
-
-                if (isSuccess) {
-                    processOrder('online', 'paid');
-                } else {
-                    setLoading(false);
-                    toast.error('Payment Failed or Cancelled');
-                }
-            }, 1000);
-        } else {
-            // COD
-            processOrder('cod', 'pending');
-        }
+        // Process order with Cash on Delivery
+        processOrder('cod', 'pending');
     };
 
     const processOrder = async (method, paymentStatus) => {
@@ -164,16 +157,18 @@ const Checkout = () => {
             const response = await api.post('/marketplace/orders', orderData);
 
             if (response.data.success) {
-                // Clear cart via context if available, else utils
-                if (contextClearCart) contextClearCart();
-                else utilsClearCart();
-
-                toast.success('Order placed successfully!');
-                navigate(`/consumer/order-confirmation/${response.data.data._id}`);
+                toast.success('Orders placed successfully!');
+                utilsClearCart();
+                // Handle array of orders (bulk) or single order object
+                const orders = Array.isArray(response.data.data) ? response.data.data : [response.data.data];
+                // Navigate to confirmation with orders state. 
+                // Using the first order's ID for the route param to satisfy the route pattern, but state carries full list.
+                navigate(`/consumer/order-confirmation/${orders[0]._id}`, { state: { orders } });
             }
         } catch (error) {
-            console.error('Order placement error:', error);
-            toast.error(error.response?.data?.message || 'Failed to place order');
+            console.error('Checkout error:', error);
+            const msg = error.response?.data?.message || 'Failed to place order';
+            toast.error(msg);
         } finally {
             setLoading(false);
         }
@@ -259,6 +254,11 @@ const Checkout = () => {
                                         <input type="text" name="pincode" className="form-input" value={deliveryAddress.pincode} onChange={handleAddressChange} maxLength="6" required />
                                     </div>
                                 </div>
+                                <div className="mt-6 flex justify-end">
+                                    <button onClick={handleNextStep} className="btn btn-primary">
+                                        Continue to Review <FaArrowRight />
+                                    </button>
+                                </div>
                             </div>
                         )}
 
@@ -278,13 +278,26 @@ const Checkout = () => {
                                 <div style={{ marginBottom: 'var(--spacing-4)' }}>
                                     {cart.map((item) => (
                                         <div key={item._id} className="flex gap-4 mb-4" style={{ paddingBottom: 'var(--spacing-4)', borderBottom: '1px solid var(--gray-200)' }}>
-                                            <img src={item.images?.[0] || '/placeholder.jpg'} alt={item.name} style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: 'var(--radius-md)' }} />
+                                            <img
+                                                src={item.images?.[0] || getCropImage(item.name) || '/placeholder.jpg'}
+                                                alt={item.name}
+                                                style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: 'var(--radius-md)' }}
+                                            />
                                             <div style={{ flex: 1 }}>
                                                 <h4>{item.name}</h4>
                                                 <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--gray-600)' }}>Quantity: {item.cartQuantity}</p>
                                             </div>
                                             <div className="text-right">
-                                                <div style={{ fontWeight: 600 }}>{formatPrice(item.consumerPrice * item.cartQuantity)}</div>
+                                                <div style={{ fontWeight: 600 }}>
+                                                    {(() => {
+                                                        let price = item.consumerPrice !== undefined ? item.consumerPrice : item.expectedPrice;
+                                                        if (typeof price === 'string') {
+                                                            price = parseFloat(price.replace(/[^0-9.]/g, ''));
+                                                        }
+                                                        if (!price || isNaN(price)) price = 0;
+                                                        return formatPrice(price * (item.cartQuantity || 1));
+                                                    })()}
+                                                </div>
                                             </div>
                                         </div>
                                     ))}
@@ -294,6 +307,14 @@ const Checkout = () => {
                                     <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--gray-700)' }}>
                                         {deliveryAddress.name}<br />{deliveryAddress.phone}<br />{deliveryAddress.street}<br />{deliveryAddress.city}, {deliveryAddress.state} - {deliveryAddress.pincode}
                                     </p>
+                                </div>
+                                <div className="mt-6 flex justify-between">
+                                    <button onClick={handlePreviousStep} className="btn btn-outline">
+                                        <FaArrowLeft /> Back
+                                    </button>
+                                    <button onClick={handleNextStep} className="btn btn-primary">
+                                        Proceed to Payment <FaArrowRight />
+                                    </button>
                                 </div>
                             </div>
                         )}
@@ -309,46 +330,61 @@ const Checkout = () => {
                                             <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--gray-600)' }}>Pay when you receive your order</div>
                                         </div>
                                     </label>
-                                    <label className="flex items-center gap-3 p-4 border rounded-lg cursor-pointer" style={{ borderColor: paymentMethod === 'online' ? 'var(--primary-green)' : 'var(--gray-300)', background: paymentMethod === 'online' ? 'var(--green-50)' : 'white' }}>
-                                        <input type="radio" name="paymentMethod" value="online" checked={paymentMethod === 'online'} onChange={(e) => setPaymentMethod(e.target.value)} />
-                                        <div>
-                                            <div style={{ fontWeight: 600 }}>Online Payment</div>
-                                            <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--gray-600)' }}>Pay securely with Razorpay</div>
-                                        </div>
+                                </div>
+                                <div style={{ marginBottom: 'var(--spacing-6)' }}>
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                        <input type="checkbox" checked={agreedToTerms} onChange={(e) => setAgreedToTerms(e.target.checked)} />
+                                        <span style={{ fontSize: 'var(--font-size-sm)' }}>
+                                            I agree to the <a href="#" style={{ color: 'var(--primary-green)' }}>Terms and Conditions</a>
+                                        </span>
                                     </label>
                                 </div>
-                                <label className="flex items-start gap-2 cursor-pointer">
-                                    <input type="checkbox" checked={agreedToTerms} onChange={(e) => setAgreedToTerms(e.target.checked)} style={{ marginTop: '4px' }} />
-                                    <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--gray-700)' }}>I agree to the <a href="#" style={{ color: 'var(--primary-green)' }}>Terms and Conditions</a></span>
-                                </label>
+                                <div className="flex justify-between">
+                                    <button onClick={handlePreviousStep} className="btn btn-outline">
+                                        <FaArrowLeft /> Back
+                                    </button>
+                                    <button
+                                        onClick={handlePlaceOrder}
+                                        className="btn btn-primary btn-lg"
+                                        disabled={loading || !agreedToTerms}
+                                    >
+                                        {loading ? <div className="spinner"></div> : 'Place Order'}
+                                    </button>
+                                </div>
                             </div>
                         )}
-
-                        <div className="flex items-center justify-between mt-6">
-                            {currentStep > 1 && (
-                                <button onClick={handlePreviousStep} className="btn btn-outline" disabled={loading}><FaArrowLeft /> Previous</button>
-                            )}
-                            {currentStep < 3 ? (
-                                <button onClick={handleNextStep} className="btn btn-primary" style={{ marginLeft: 'auto' }}>Next <FaArrowRight /></button>
-                            ) : (
-                                <button onClick={handlePlaceOrder} className="btn btn-primary btn-lg animate-pulse" style={{ marginLeft: 'auto' }} disabled={loading || !agreedToTerms}>
-                                    {loading ? <div className="spinner" style={{ width: '20px', height: '20px' }}></div> : <>{paymentMethod === 'online' ? 'Pay with Razorpay' : 'Place Order'}</>}
-                                </button>
-                            )}
-                        </div>
                     </div>
 
+                    {/* Order Summary Sidebar */}
                     <div>
                         <div className="card-premium" style={{ position: 'sticky', top: 'var(--spacing-4)' }}>
                             <h3 style={{ marginBottom: 'var(--spacing-4)' }}>Order Summary</h3>
                             <div style={{ marginBottom: 'var(--spacing-4)' }}>
-                                <div className="flex items-center justify-between mb-3"><span style={{ color: 'var(--gray-600)' }}>Subtotal ({cart.length} items)</span><span style={{ fontWeight: 600 }}>{formatPrice(subtotal)}</span></div>
-                                <div className="flex items-center justify-between mb-3"><span style={{ color: 'var(--gray-600)' }}>Delivery</span><span style={{ fontWeight: 600, color: delivery === 0 ? 'var(--success)' : 'inherit' }}>{delivery === 0 ? 'FREE' : formatPrice(delivery)}</span></div>
-                                <div className="flex items-center justify-between mb-3"><span style={{ color: 'var(--gray-600)' }}>Tax (GST)</span><span style={{ fontWeight: 600 }}>{formatPrice(tax)}</span></div>
-                                <div style={{ borderTop: '2px solid var(--gray-200)', paddingTop: 'var(--spacing-3)', marginTop: 'var(--spacing-3)' }}><div className="flex items-center justify-between"><span style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700 }}>Total</span><span style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 700, color: 'var(--primary-green)' }}>{formatPrice(total)}</span></div></div>
+                                <div className="flex items-center justify-between mb-3">
+                                    <span style={{ color: 'var(--gray-600)' }}>Subtotal ({cart.length} items)</span>
+                                    <span style={{ fontWeight: 600 }}>{formatPrice(subtotal)}</span>
+                                </div>
+                                <div className="flex items-center justify-between mb-3">
+                                    <span style={{ color: 'var(--gray-600)' }}>Delivery</span>
+                                    <span style={{ fontWeight: 600, color: delivery === 0 ? 'var(--success)' : 'inherit' }}>{delivery === 0 ? 'FREE' : formatPrice(delivery)}</span>
+                                </div>
+                                <div className="flex items-center justify-between mb-3">
+                                    <span style={{ color: 'var(--gray-600)' }}>Tax (GST)</span>
+                                    <span style={{ fontWeight: 600 }}>{formatPrice(tax)}</span>
+                                </div>
+                                <div style={{ borderTop: '1px solid var(--gray-200)', paddingTop: 'var(--spacing-3)', marginTop: 'var(--spacing-3)' }}>
+                                    <div className="flex items-center justify-between">
+                                        <span style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700 }}>Total</span>
+                                        <span style={{ fontSize: 'var(--font-size-xl)', fontWeight: 700, color: 'var(--primary-green)' }}>
+                                            {formatPrice(total)}
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
-                            <div className="text-center" style={{ padding: 'var(--spacing-3)', background: 'var(--gray-50)', borderRadius: 'var(--radius-md)' }}>
-                                <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--gray-600)' }}>🔒 100% Secure Payment</p>
+                            <div className="text-center" style={{ background: 'var(--gray-50)', padding: 'var(--spacing-3)', borderRadius: 'var(--radius-md)' }}>
+                                <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--gray-500)' }}>
+                                    Step {currentStep} of 3
+                                </p>
                             </div>
                         </div>
                     </div>

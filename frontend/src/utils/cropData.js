@@ -157,6 +157,7 @@ export const getStatusBadgeClass = (status) => {
 
 // Format price in INR
 export const formatPrice = (price) => {
+    if (price === undefined || price === null || isNaN(price)) return '₹0';
     return new Intl.NumberFormat('en-IN', {
         style: 'currency',
         currency: 'INR',
@@ -184,75 +185,64 @@ export const formatDateTime = (date) => {
     });
 };
 
-// Crop Image Mappings - High quality stock photos
+// Crop Images (Wikipedia/Wikimedia Commons)
 export const cropImages = {
     // Cereals
-    'Rice': 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=800&q=80',
-    'Paddy': 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=800&q=80',
-    'Wheat': 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=800&q=80',
-    'Maize': 'https://images.unsplash.com/photo-1603569283847-aa295f0d016a?w=800&q=80',
-    'Bajra': 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=800&q=80',
-    'Jowar': 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=800&q=80',
-    'Barley': 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=800&q=80',
-    'Ragi': 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=800&q=80',
+    'Rice': 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/Rice_Plants_%28IRRI%29.jpg/640px-Rice_Plants_%28IRRI%29.jpg',
+    'Paddy': 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/Rice_Plants_%28IRRI%29.jpg/640px-Rice_Plants_%28IRRI%29.jpg',
+    'Wheat': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Vehn%C3%A4pelto_6.jpg/640px-Vehn%C3%A4pelto_6.jpg',
+    'Maize': 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Maize_field_in_summer.jpg/640px-Maize_field_in_summer.jpg',
+    'Bajra': 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Pearl_millet.jpg/640px-Pearl_millet.jpg',
+    'Jowar': 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Sorghum_bicolor_002.jpg/640px-Sorghum_bicolor_002.jpg',
+    'Barley': 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Barley_field.jpg/640px-Barley_field.jpg',
+    'Ragi': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Millet_seeds.jpg/640px-Millet_seeds.jpg',
 
     // Pulses
-    'Gram': 'https://images.unsplash.com/photo-1610988924854-e3c2f8c4d9a2?w=800&q=80',
-    'Lentils': 'https://images.unsplash.com/photo-1610988924854-e3c2f8c4d9a2?w=800&q=80',
-    'Peas': 'https://images.unsplash.com/photo-1588165171080-c89acfa5ee83?w=800&q=80',
-    'Arhar': 'https://images.unsplash.com/photo-1610988924854-e3c2f8c4d9a2?w=800&q=80',
-    'Moong': 'https://images.unsplash.com/photo-1610988924854-e3c2f8c4d9a2?w=800&q=80',
-    'Urad': 'https://images.unsplash.com/photo-1610988924854-e3c2f8c4d9a2?w=800&q=80',
-
-    // Cash Crops
-    'Cotton': 'https://images.unsplash.com/photo-1615485500834-bc10199bc727?w=800&q=80',
-    'Sugarcane': 'https://images.unsplash.com/photo-1583484963886-cfe2a9a8c3ce?w=800&q=80',
-    'Jute': 'https://images.unsplash.com/photo-1615485500834-bc10199bc727?w=800&q=80',
-    'Tobacco': 'https://images.unsplash.com/photo-1615485500834-bc10199bc727?w=800&q=80',
-
-    // Oilseeds
-    'Groundnut': 'https://images.unsplash.com/photo-1608797178974-15b35a64ede9?w=800&q=80',
-    'Mustard': 'https://images.unsplash.com/photo-1615485500834-bc10199bc727?w=800&q=80',
-    'Soybean': 'https://images.unsplash.com/photo-1608797178974-15b35a64ede9?w=800&q=80',
-    'Sunflower': 'https://images.unsplash.com/photo-1597848212624-e530bb4fe5e2?w=800&q=80',
+    'Lentil': 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Lens_culinaris_seeds.jpg/640px-Lens_culinaris_seeds.jpg',
+    'Lentils': 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Lens_culinaris_seeds.jpg/640px-Lens_culinaris_seeds.jpg',
+    'Gram': 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Chickpea_India.jpg/640px-Chickpea_India.jpg',
+    'Peas': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Peas_in_pods_-_Studio.jpg/640px-Peas_in_pods_-_Studio.jpg',
+    'Arhar': 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Pigeon_peas.jpg/640px-Pigeon_peas.jpg',
+    'Moong': 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Mung_bean.jpg/640px-Mung_bean.jpg',
+    'Urad': 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Black_gram.jpg/640px-Black_gram.jpg',
 
     // Vegetables
-    'Tomato': 'https://images.unsplash.com/photo-1546470427-227a4e2c2f0f?w=800&q=80',
-    'Potato': 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=800&q=80',
-    'Potatoes': 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=800&q=80',
-    'Onion': 'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=800&q=80',
-    'Cabbage': 'https://images.unsplash.com/photo-1594282486552-05b4d80fbb9f?w=800&q=80',
-    'Cauliflower': 'https://images.unsplash.com/photo-1568584711271-e0e4e9d5d4a1?w=800&q=80',
-    'Brinjal': 'https://images.unsplash.com/photo-1659261200833-ec8761558af7?w=800&q=80',
-    'Cucumber': 'https://images.unsplash.com/photo-1604977042946-1eecc30f269e?w=800&q=80',
-    'Vegetables': 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=800&q=80',
+    'Tomato': '/images/crops/tomatoes.png',
+    'Potato': '/images/crops/cabbage.png', // Placeholder
+    'Potatoes': '/images/crops/cabbage.png', // Placeholder
+    'Onion': '/images/crops/cabbage.png', // Placeholder
+    'Cabbage': '/images/crops/cabbage.png',
+    'Cauliflower': '/images/crops/cauliflower.png',
+    'Brinjal': '/images/crops/cabbage.png', // Placeholder
+    'Cucumber': '/images/crops/cabbage.png', // Placeholder
+    'Vegetables': '/images/crops/cabbage.png', // Placeholder
 
     // Fruits
-    'Mango': 'https://images.unsplash.com/photo-1605027990121-cbae9d3ce6fa?w=800&q=80',
-    'Banana': 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=800&q=80',
-    'Grapes': 'https://images.unsplash.com/photo-1537640538966-79f369143f8f?w=800&q=80',
-    'Apple': 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=800&q=80',
-    'Orange': 'https://images.unsplash.com/photo-1547514701-42782101795e?w=800&q=80',
-    'Watermelon': 'https://images.unsplash.com/photo-1587049352846-4a222e784720?w=800&q=80',
-    'Muskmelon': 'https://images.unsplash.com/photo-1621583832862-f5a7c5f2f0b3?w=800&q=80',
+    'Mango': '/images/crops/bananas.png', // Placeholder
+    'Banana': '/images/crops/bananas.png',
+    'Grapes': '/images/crops/bananas.png', // Placeholder
+    'Apple': '/images/crops/bananas.png', // Placeholder
+    'Orange': '/images/crops/bananas.png', // Placeholder
+    'Watermelon': '/images/crops/bananas.png', // Placeholder
+    'Muskmelon': '/images/crops/bananas.png', // Placeholder
 
     // Spices
-    'Turmeric': 'https://images.unsplash.com/photo-1615485500834-bc10199bc727?w=800&q=80',
-    'Chillies': 'https://images.unsplash.com/photo-1583454155184-870a1f63eeac?w=800&q=80',
-    'Chilli': 'https://images.unsplash.com/photo-1583454155184-870a1f63eeac?w=800&q=80',
-    'Ginger': 'https://images.unsplash.com/photo-1615485500834-bc10199bc727?w=800&q=80',
-    'Garlic': 'https://images.unsplash.com/photo-1615485500834-bc10199bc727?w=800&q=80',
+    'Turmeric': '/images/crops/turmeric.png', // Need a turmeric image? using placeholder for now or existing path if generated
+    'Chillies': '/images/crops/chilli.png',
+    'Chilli': '/images/crops/chilli.png',
+    'Ginger': '/images/crops/turmeric.png', // Fallback
+    'Garlic': '/images/crops/turmeric.png', // Fallback
 
     // Others
-    'Coffee': 'https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=800&q=80',
-    'Tea': 'https://images.unsplash.com/photo-1597318112874-f1cdcf8c3f2e?w=800&q=80',
-    'Coconut': 'https://images.unsplash.com/photo-1598511757337-fe2cafc31ba0?w=800&q=80',
-    'Rubber': 'https://images.unsplash.com/photo-1615485500834-bc10199bc727?w=800&q=80',
-    'Arecanut': 'https://images.unsplash.com/photo-1615485500834-bc10199bc727?w=800&q=80',
-    'Tapioca': 'https://images.unsplash.com/photo-1615485500834-bc10199bc727?w=800&q=80',
+    'Coffee': '/images/crops/coffee.png', // Placeholder
+    'Tea': '/images/crops/tea.png', // Placeholder
+    'Coconut': '/images/crops/coconut.png', // Placeholder
+    'Rubber': '/images/crops/sugarcane.png', // Fallback
+    'Arecanut': '/images/crops/coconut.png', // Fallback
+    'Tapioca': '/images/crops/sugarcane.png', // Fallback
 
     // Summer crops
-    'Summer Maize': 'https://images.unsplash.com/photo-1603569283847-aa295f0d016a?w=800&q=80',
+    'Summer Maize': '/images/crops/maize.png',
 };
 
 // Get crop image by name

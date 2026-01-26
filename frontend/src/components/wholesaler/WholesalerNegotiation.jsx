@@ -226,7 +226,7 @@ const WholesalerNegotiation = () => {
                                                     </span>
                                                     {neg.currentOffer && (
                                                         <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--gray-600)' }}>
-                                                            Current: <strong style={{ color: 'var(--primary-green)' }}>{formatPrice(neg.currentOffer.pricePerUnit)}</strong>
+                                                            Current: <strong style={{ color: 'var(--primary-green)' }}>{formatPrice(neg.currentOffer.amount)}</strong>
                                                         </span>
                                                     )}
                                                 </div>

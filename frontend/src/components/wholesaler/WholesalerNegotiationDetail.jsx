@@ -40,11 +40,17 @@ const WholesalerNegotiationDetail = () => {
             return;
         }
 
+        console.log('Sending Offer:', {
+            amount: parseFloat(offerAmount),
+            quantity: currentQuantity,
+            message: offerMessage
+        });
+
         setSubmitting(true);
         try {
             await api.post(`/negotiations/${id}/offer`, {
                 amount: parseFloat(offerAmount),
-                quantity: negotiation.agreedQuantity,
+                quantity: currentQuantity,
                 message: offerMessage,
             });
 
@@ -81,10 +87,11 @@ const WholesalerNegotiationDetail = () => {
 
     if (!negotiation) {
         return (
-            <div className="container mt-8">
-                <div className="card text-center p-8">
-                    <h3>Negotiation not found</h3>
-                    <button className="btn btn-primary mt-4" onClick={() => navigate('/wholesaler/negotiations')}>
+            <div className="container flex items-center justify-center" style={{ minHeight: '60vh' }}>
+                <div className="text-center">
+                    <h2>Negotiation Not Found</h2>
+                    <p className="text-gray-600 mb-4">The negotiation you are looking for does not exist or you do not have permission to view it.</p>
+                    <button className="btn btn-primary" onClick={() => navigate('/wholesaler/negotiations')}>
                         Back to Negotiations
                     </button>
                 </div>
@@ -94,7 +101,35 @@ const WholesalerNegotiationDetail = () => {
 
     const crop = negotiation.crop;
     const farmer = negotiation.farmer;
+
+    // Debug Log
+    console.log('Rendering Negotiation:', negotiation);
+
+    if (!crop) {
+        return (
+            <div className="container text-center py-10">
+                <h2>Crop Data Unavailable</h2>
+                <p>The crop associated with this negotiation has been removed.</p>
+                <button className="btn btn-primary" onClick={() => navigate('/wholesaler/negotiations')}>Back</button>
+            </div>
+        );
+    }
+
+    if (!farmer) {
+        return (
+            <div className="container text-center py-10">
+                <h2>Farmer Data Unavailable</h2>
+                <p>The farmer associated with this negotiation is no longer active.</p>
+                <button className="btn btn-primary" onClick={() => navigate('/wholesaler/negotiations')}>Back</button>
+            </div>
+        );
+    }
+
     const isOngoing = negotiation.status === 'ongoing';
+    const canRespond = isOngoing && negotiation.currentOffer?.offeredBy === 'farmer';
+
+    // Get the quantity from current offer or crop default
+    const currentQuantity = negotiation.currentOffer?.quantity || crop?.quantity || { value: 0, unit: 'units' };
 
     return (
         <div className="container" style={{ marginTop: 'var(--spacing-8)', marginBottom: 'var(--spacing-8)' }}>
@@ -115,14 +150,14 @@ const WholesalerNegotiationDetail = () => {
             </div>
 
             <div className="grid grid-cols-1 gap-6" style={{ gridTemplateColumns: '1fr 1fr' }}>
-                {/* Left Column - Crop & Farmer Details */}
+                {/* Left Column - Crop & Negotiation Details */}
                 <div className="flex flex-col gap-6">
                     {/* Crop Information */}
                     <div className="card">
                         <h3 className="mb-4">Crop Details</h3>
                         <div className="mb-4">
                             <img
-                                src={getCropImage(crop?.name)}
+                                src={getCropImage(crop?.name) || '/placeholder.jpg'}
                                 alt={crop?.name}
                                 className="img-cover img-rounded"
                                 style={{ width: '100%', height: '250px' }}
@@ -144,7 +179,7 @@ const WholesalerNegotiationDetail = () => {
                                 </span>
                             </div>
                             <div className="flex justify-between">
-                                <span style={{ color: 'var(--gray-600)' }}>Farmer's Expected Price:</span>
+                                <span style={{ color: 'var(--gray-600)' }}>Your Expected Price:</span>
                                 <strong style={{ color: 'var(--primary-green)' }}>
                                     {formatPrice(crop?.expectedPrice)}/quintal
                                 </strong>
@@ -184,17 +219,22 @@ const WholesalerNegotiationDetail = () => {
                     </div>
 
                     {/* Current Offer */}
-                    {negotiation.currentOffer && (
-                        <div className="card" style={{ background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.05))' }}>
+                    {negotiation.currentOffer ? (
+                        <div className="card" style={{ background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05))' }}>
                             <h3 className="mb-4">Current Offer</h3>
                             <div className="text-center">
-                                <div style={{ fontSize: 'var(--font-size-4xl)', fontWeight: 700, color: 'var(--secondary-gold)', marginBottom: 'var(--spacing-2)' }}>
-                                    {formatPrice(negotiation.currentOffer.amount)}
+                                <div style={{ fontSize: 'var(--font-size-4xl)', fontWeight: 700, color: 'var(--primary-green)', marginBottom: 'var(--spacing-2)' }}>
+                                    {formatPrice(negotiation.currentOffer.amount || 0)}
                                 </div>
                                 <p style={{ color: 'var(--gray-600)' }}>
                                     per quintal • Offered by {negotiation.currentOffer.offeredBy === 'wholesaler' ? 'You' : farmer?.name}
                                 </p>
                             </div>
+                        </div>
+                    ) : (
+                        <div className="card">
+                            <h3 className="mb-4">Current Offer</h3>
+                            <p>No active offer.</p>
                         </div>
                     )}
 

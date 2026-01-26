@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import {
     FaCheckCircle,
@@ -13,19 +13,26 @@ import { formatPrice } from '../../utils/cartUtils';
 
 const OrderConfirmation = () => {
     const { orderId } = useParams();
-    const [order, setOrder] = useState(null);
+    const location = useLocation();
+    const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
 
     useEffect(() => {
-        loadOrder();
-    }, [orderId]);
+        if (location.state?.orders) {
+            setOrders(location.state.orders);
+            setLoading(false);
+        } else {
+            loadOrder();
+        }
+    }, [orderId, location.state]);
 
     const loadOrder = async () => {
         try {
             setLoading(true);
-            const response = await api.get(`/marketplace/orders/${orderId}/track`);
-            setOrder(response.data.data);
+            const response = await api.get(`/orders/${orderId}`);
+            const data = response.data.data;
+            setOrders(Array.isArray(data) ? data : [data]);
         } catch (error) {
             console.error('Error loading order:', error);
             toast.error('Failed to load order details');
@@ -45,6 +52,9 @@ const OrderConfirmation = () => {
         });
     };
 
+    const totalAmount = orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+    const primaryOrder = orders[0];
+
     if (loading) {
         return (
             <div className="flex items-center justify-center" style={{ minHeight: '80vh' }}>
@@ -53,7 +63,7 @@ const OrderConfirmation = () => {
         );
     }
 
-    if (!order) {
+    if (!orders.length) {
         return null;
     }
 
@@ -84,25 +94,24 @@ const OrderConfirmation = () => {
                         Thank you for your order
                     </p>
                     <div style={{ fontSize: 'var(--font-size-xl)', fontWeight: 600, color: 'var(--primary-green)' }}>
-                        Order #{order.orderNumber}
+                        {orders.length > 1 ? `${orders.length} Orders Placed` : `Order #${primaryOrder.orderNumber}`}
                     </div>
                 </div>
 
-                {/* Order Details */}
-                <div className="card-premium mb-6">
-                    <h2 style={{ marginBottom: 'var(--spacing-4)' }}>Order Details</h2>
+                {/* Display each order or a summary list */}
+                {orders.map(order => (
+                    <div key={order._id} className="card-premium mb-6">
+                        <div className="flex justify-between items-center mb-4" style={{ borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
+                            <h3>Order #{order.orderNumber}</h3>
+                            <span className="badge" style={{ background: 'var(--success)', color: 'white' }}>{order.orderStatus}</span>
+                        </div>
 
-                    {/* Items */}
-                    <div style={{ marginBottom: 'var(--spacing-4)' }}>
-                        {order.items.map((item) => (
-                            <div
-                                key={item._id}
-                                className="flex gap-4 mb-4"
-                                style={{ paddingBottom: 'var(--spacing-4)', borderBottom: '1px solid var(--gray-200)' }}
-                            >
+                        {/* Items */}
+                        <div style={{ marginBottom: 'var(--spacing-4)' }}>
+                            <div className="flex gap-4 mb-4">
                                 <img
-                                    src={item.crop?.images?.[0] || '/placeholder.jpg'}
-                                    alt={item.crop?.name}
+                                    src={order.crop?.images?.[0] || '/placeholder.jpg'}
+                                    alt={order.crop?.name}
                                     style={{
                                         width: '80px',
                                         height: '80px',
@@ -111,29 +120,31 @@ const OrderConfirmation = () => {
                                     }}
                                 />
                                 <div style={{ flex: 1 }}>
-                                    <h4>{item.crop?.name}</h4>
+                                    <h4>{order.crop?.name}</h4>
                                     <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--gray-600)' }}>
-                                        Quantity: {item.quantity}
+                                        Quantity: {order.quantity?.value} {order.quantity?.unit}
                                     </p>
                                     <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--gray-600)' }}>
-                                        Farmer: {item.farmer?.name}
+                                        Farmer: {order.farmer?.name}
                                     </p>
                                 </div>
                                 <div className="text-right">
                                     <div style={{ fontWeight: 600 }}>
-                                        {formatPrice(item.total)}
+                                        {formatPrice(order.totalAmount)}
                                     </div>
                                 </div>
                             </div>
-                        ))}
+                        </div>
                     </div>
+                ))}
 
-                    {/* Price Summary */}
+                {/* Total Summary */}
+                <div className="card-premium mb-6">
                     <div style={{ padding: 'var(--spacing-4)', background: 'var(--gray-50)', borderRadius: 'var(--radius-md)' }}>
                         <div className="flex items-center justify-between mb-2">
-                            <span>Total Amount</span>
+                            <span>Total Amount Paid</span>
                             <span style={{ fontSize: 'var(--font-size-xl)', fontWeight: 700, color: 'var(--primary-green)' }}>
-                                {formatPrice(order.totalAmount)}
+                                {formatPrice(totalAmount)}
                             </span>
                         </div>
                         <div className="flex items-center justify-between">
@@ -141,23 +152,23 @@ const OrderConfirmation = () => {
                                 Payment Method
                             </span>
                             <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600 }}>
-                                {order.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Online Payment'}
+                                {primaryOrder.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Online Payment'}
                             </span>
                         </div>
                     </div>
                 </div>
 
-                {/* Delivery Information */}
+                {/* Delivery Information (Using primary order for address as they are same for bulk) */}
                 <div className="card-premium mb-6">
                     <div className="flex items-start gap-3 mb-4">
                         <FaMapMarkerAlt style={{ color: 'var(--primary-green)', fontSize: 'var(--font-size-xl)', marginTop: '4px' }} />
                         <div>
                             <h3 style={{ marginBottom: 'var(--spacing-2)' }}>Delivery Address</h3>
                             <p style={{ color: 'var(--gray-700)', lineHeight: 1.6 }}>
-                                {order.deliveryAddress.name}<br />
-                                {order.deliveryAddress.phone}<br />
-                                {order.deliveryAddress.street}<br />
-                                {order.deliveryAddress.city}, {order.deliveryAddress.state} - {order.deliveryAddress.pincode}
+                                {primaryOrder.deliveryAddress.name}<br />
+                                {primaryOrder.deliveryAddress.phone}<br />
+                                {primaryOrder.deliveryAddress.street}<br />
+                                {primaryOrder.deliveryAddress.city}, {primaryOrder.deliveryAddress.state} - {primaryOrder.deliveryAddress.pincode}
                             </p>
                         </div>
                     </div>
@@ -176,7 +187,7 @@ const OrderConfirmation = () => {
                 {/* Actions */}
                 <div className="grid grid-cols-2 gap-4">
                     <Link
-                        to={`/consumer/orders/${order._id}`}
+                        to={`/consumer/orders/${primaryOrder._id}`}
                         className="btn btn-primary"
                     >
                         <FaTruck /> Track Order
