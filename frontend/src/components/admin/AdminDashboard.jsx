@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../../services/api';
 import { toast } from 'react-toastify';
 import { formatPrice } from '../../utils/cropData';
@@ -22,6 +23,12 @@ import 'jspdf-autotable';
 const AdminDashboard = () => {
     const [analytics, setAnalytics] = useState(null);
     const [recentNegotiations, setRecentNegotiations] = useState([]);
+    const [pendingCrops, setPendingCrops] = useState([]);
+    const [pendingUsers, setPendingUsers] = useState([]);
+    const [verifiedUsers, setVerifiedUsers] = useState([]);
+    const [selectedUser, setSelectedUser] = useState(null);
+    const [selectedCrop, setSelectedCrop] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         loadDashboardData();

@@ -96,7 +96,46 @@ app.get('/api/seed', async (req, res) => {
                 role: 'consumer'
             });
         }
-        res.json({ message: 'Database Seeded Successfully! You can now login with password123' });
+        const admin = await User.findOne({ email: 'admin@test.com' });
+        if (!admin) {
+            await User.create({
+                name: 'Super Admin',
+                email: 'admin@test.com',
+                password: 'password123',
+                phone: '9111111111',
+                role: 'admin'
+            });
+        }
+        const superadmin = await User.findOne({ email: 'superadmin@agrimart.com' });
+        if (!superadmin) {
+            await User.create({
+                name: 'Main Admin',
+                email: 'superadmin@agrimart.com',
+                password: 'Admin@2026',
+                phone: '9333333333',
+                role: 'admin'
+            });
+        }
+        const wholesaler = await User.findOne({ email: 'wholesaler@test.com' });
+        if (!wholesaler) {
+            await User.create({
+                name: 'Main Wholesaler',
+                email: 'wholesaler@test.com',
+                password: 'password123',
+                phone: '9222222222',
+                role: 'wholesaler',
+                region: 'South India'
+            });
+        }
+        res.json({
+            message: 'Database Seeded Successfully!',
+            credentials: {
+                farmer: 'farmer@test.com / password123',
+                consumer: 'consumer@test.com / password123',
+                admin: 'superadmin@agrimart.com / Admin@2026',
+                wholesaler: 'wholesaler@test.com / password123'
+            }
+        });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
