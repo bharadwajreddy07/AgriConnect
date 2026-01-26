@@ -71,6 +71,36 @@ app.use('/api/chats', chatRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/marketplace', marketplaceRoutes);
+import User from './models/User.js';
+app.get('/api/seed', async (req, res) => {
+    try {
+        const farmer = await User.findOne({ email: 'farmer@test.com' });
+        if (!farmer) {
+            await User.create({
+                name: 'Ramesh Farmer',
+                email: 'farmer@test.com',
+                password: 'password123',
+                phone: '9876543210',
+                role: 'farmer',
+                address: { street: '123 Village', village: 'Guntur', district: 'Guntur', state: 'AP', pincode: '522001' },
+                region: 'South India'
+            });
+        }
+        const consumer = await User.findOne({ email: 'consumer@test.com' });
+        if (!consumer) {
+            await User.create({
+                name: 'Test Consumer',
+                email: 'consumer@test.com',
+                password: 'password123',
+                phone: '9000000000',
+                role: 'consumer'
+            });
+        }
+        res.json({ message: 'Database Seeded Successfully! You can now login with password123' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 
 // Root route
 app.get('/', (req, res) => {
