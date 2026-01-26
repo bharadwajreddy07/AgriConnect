@@ -239,6 +239,23 @@ const CropListing = () => {
                         </div>
 
                         <div className="form-group">
+                            <label className="form-label">Price Unit *</label>
+                            <select
+                                name="priceUnit"
+                                className="form-select"
+                                value={formData.priceUnit}
+                                onChange={handleChange}
+                                required
+                            >
+                                <option value="quintal">per quintal</option>
+                                <option value="kg">per kg</option>
+                                <option value="ton">per ton</option>
+                                <option value="piece">per piece</option>
+                                <option value="bunch">per bunch</option>
+                            </select>
+                        </div>
+
+                        <div className="form-group">
                             <label className="form-label">Quality Grade</label>
                             <select
                                 name="qualityGrade"

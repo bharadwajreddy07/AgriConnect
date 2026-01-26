@@ -108,14 +108,27 @@ const WholesalerNegotiation = () => {
             console.log('Starting negotiation for crop:', cropId);
             console.log('Offer details:', offer);
 
-            await api.post('/negotiations', {
+            const response = await api.post('/negotiations', {
                 crop: cropId,
                 initialPrice: offer.pricePerUnit,
                 quantity: offer.quantity,
                 message: `Negotiation request for ${crop.name}`
             });
             toast.success('Negotiation started successfully!');
-            loadData();
+            // clear offer
+            setOffer({
+                pricePerUnit: '',
+                quantity: { value: '', unit: 'quintal' },
+                deliveryTerms: '',
+                paymentTerms: '',
+                notes: '',
+            });
+            // Redirect to the new negotiation detail page
+            if (response.data && response.data.data && response.data.data._id) {
+                navigate(`/wholesaler/negotiations/${response.data.data._id}`);
+            } else {
+                loadData();
+            }
         } catch (error) {
             console.error('Error creating negotiation:', error);
             toast.error(error.response?.data?.message || 'Failed to start negotiation');
@@ -305,12 +318,12 @@ const WholesalerNegotiation = () => {
                             </div>
                             <div>
                                 <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--gray-600)' }}>Available</p>
-                                <p style={{ fontWeight: 600 }}>{crop.quantity.value} {crop.quantity.unit}</p>
+                                <p style={{ fontWeight: 600 }}>{crop.quantity?.value || 0} {crop.quantity?.unit || 'units'}</p>
                             </div>
                             <div>
                                 <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--gray-600)' }}>Listed Price</p>
                                 <p style={{ fontWeight: 700, color: 'var(--primary-green)' }}>
-                                    {formatPrice(crop.expectedPrice)}
+                                    {formatPrice(crop.expectedPrice || 0)} / {crop.quantity?.unit || 'quintal'}
                                 </p>
                             </div>
                             <div>

@@ -275,3 +275,27 @@ export const getPriceTrends = async (req, res) => {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
+
+// @desc    Get recent negotiations
+// @route   GET /api/admin/negotiations/recent
+// @access  Private (Admin only)
+export const getRecentNegotiations = async (req, res) => {
+    try {
+        const negotiations = await Negotiation.find()
+            .sort({ updatedAt: -1 })
+            .limit(10)
+            .populate('crop', 'name images')
+            .populate('farmer', 'name email phone region')
+            .populate('wholesaler', 'name email phone company')
+            .populate('currentOffer');
+
+        res.json({
+            success: true,
+            count: negotiations.length,
+            data: negotiations,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};

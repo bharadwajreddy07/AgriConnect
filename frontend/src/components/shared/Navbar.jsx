@@ -32,6 +32,7 @@ const Navbar = () => {
                     <>
                         <Link to="/wholesaler" className="nav-link">Dashboard</Link>
                         <Link to="/wholesaler/marketplace" className="nav-link">Marketplace</Link>
+                        <Link to="/wholesaler/negotiations" className="nav-link">Negotiations</Link>
                     </>
                 );
             case 'consumer':

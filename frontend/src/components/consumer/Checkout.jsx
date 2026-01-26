@@ -127,9 +127,28 @@ const Checkout = () => {
         setCurrentStep(currentStep - 1);
     };
 
-    // Calculate Totals using utils function
-    const cartTotals = getUtilsCartTotal() || { subtotal: 0, delivery: 0, tax: 0, total: 0 };
-    const { subtotal, delivery, tax, total } = cartTotals;
+    // Calculate Totals derived directly from current cart state (WYSIWYG)
+    const calculateTotals = () => {
+        const subtotal = cart.reduce((total, item) => {
+            let price = item.consumerPrice;
+            if (price === undefined || price === null) price = item.expectedPrice;
+
+            // Handle string prices
+            if (typeof price === 'string') {
+                price = parseFloat(price.replace(/[^0-9.]/g, '') || 0);
+            }
+
+            return total + ((price || 0) * (item.cartQuantity || 1));
+        }, 0);
+
+        const delivery = 0; // Free delivery
+        const tax = subtotal * 0.05; // 5% GST
+        const total = subtotal + delivery + tax;
+
+        return { subtotal, delivery, tax, total };
+    };
+
+    const { subtotal, delivery, tax, total } = calculateTotals();
 
     const handlePlaceOrder = async () => {
         if (!agreedToTerms) {

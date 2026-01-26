@@ -7,6 +7,7 @@ import Negotiation from '../models/Negotiation.js';
 // @access  Private (Wholesaler or Consumer)
 export const placeOrder = async (req, res) => {
     try {
+        console.log('Request Body:', JSON.stringify(req.body, null, 2));
         const { items, deliveryAddress, paymentMethod } = req.body;
 
         // Determine buyer
@@ -73,13 +74,23 @@ export const placeOrder = async (req, res) => {
                 continue;
             }
 
-            const newOrder = await Order.create({
+            const orderNumber = `ORD-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 7)}`.toUpperCase();
+
+            const orderPayload = {
+                orderNumber,
                 buyer,
                 buyerType,
                 seller: crop.farmer,
                 crop: crop._id,
+                items: [{
+                    crop: crop._id,
+                    farmer: crop.farmer,
+                    quantity: qtyValue,
+                    price: finalPricePerUnit,
+                    total: totalAmount
+                }],
                 negotiation: item.negotiationId,
-                quantity: { value: qtyValue, unit: crop.quantity.unit || 'kg' }, // Ensure quantity object structure
+                quantity: { value: qtyValue, unit: crop.quantity.unit || 'kg' },
                 pricePerUnit: finalPricePerUnit,
                 totalAmount,
                 deliveryAddress,
@@ -89,7 +100,10 @@ export const placeOrder = async (req, res) => {
                     timestamp: new Date(),
                     notes: 'Order placed successfully'
                 }]
-            });
+            };
+            console.log('PAYLOAD:', JSON.stringify(orderPayload, null, 2));
+
+            const newOrder = await Order.create(orderPayload);
 
             // Update stock (simple decrement for now, can be improved)
             // Note: assuming quantity.value is the stock tracking unit
@@ -118,7 +132,13 @@ export const placeOrder = async (req, res) => {
         });
 
     } catch (error) {
-        console.error(error);
+        console.error('!!! ORDER CREATE FAILED !!!');
+        console.error(error.message);
+        if (error.errors) {
+            Object.keys(error.errors).forEach(key => {
+                console.error(`- VALIDATION ERROR [${key}]: ${error.errors[key].message}`);
+            });
+        }
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
@@ -139,7 +159,12 @@ export const getUserOrders = async (req, res) => {
         const orders = await Order.find(query)
             .populate('buyer', 'name phone email')
             .populate('seller', 'name phone email')
+            .populate('seller', 'name phone email')
             .populate('crop', 'name category season images')
+            .populate({
+                path: 'items.crop',
+                select: 'name category season images'
+            })
             .sort({ createdAt: -1 });
 
         res.json({

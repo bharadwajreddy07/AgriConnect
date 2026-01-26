@@ -324,10 +324,34 @@ const OrderTracking = () => {
                                         color: 'white',
                                     }}
                                 >
-                                    {order.paymentStatus}
+                                    {order.paymentStatus.charAt(0).toUpperCase() + order.paymentStatus.slice(1)}
                                 </span>
                             </div>
                         </div>
+
+                        {/* Actions */}
+                        {['placed', 'confirmed', 'processing', 'packed'].includes(order.orderStatus) && (
+                            <div className="card-premium mb-6">
+                                <h3 style={{ marginBottom: 'var(--spacing-3)' }}>Actions</h3>
+                                <button
+                                    onClick={async () => {
+                                        if (window.confirm('Are you sure you want to cancel this order?')) {
+                                            try {
+                                                await api.put(`/marketplace/orders/${order._id}/cancel`, { reason: 'User cancelled' });
+                                                toast.success('Order cancelled successfully');
+                                                loadOrder();
+                                            } catch (error) {
+                                                toast.error(error.response?.data?.message || 'Failed to cancel order');
+                                            }
+                                        }
+                                    }}
+                                    className="btn btn-outline"
+                                    style={{ width: '100%', borderColor: 'var(--error)', color: 'var(--error)' }}
+                                >
+                                    <FaTimesCircle /> Cancel Order
+                                </button>
+                            </div>
+                        )}
 
                         {/* Contact Support */}
                         <div className="card-premium">

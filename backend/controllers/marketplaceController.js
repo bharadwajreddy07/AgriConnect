@@ -128,14 +128,19 @@ export const placeConsumerOrder = async (req, res) => {
             await crop.save();
         }
 
+        // Generate Order Number
+        const orderNumber = `ORD-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 7)}`.toUpperCase();
+
         // Create order
         const order = await Order.create({
+            orderNumber,
             buyer: req.user._id,
+            buyerType: 'consumer',
             items: orderItems,
             totalAmount,
             deliveryAddress,
-            paymentMethod: paymentMethod || 'COD',
-            paymentStatus: paymentMethod === 'COD' ? 'pending' : 'paid',
+            paymentMethod: paymentMethod || 'cod',
+            paymentStatus: /(cod|cash)/i.test(paymentMethod || 'cod') ? 'pending' : 'paid',
             orderStatus: 'placed',
             orderType: 'consumer',
         });
@@ -455,6 +460,56 @@ export const addTrackingInfo = async (req, res) => {
         res.json({
             success: true,
             data: order,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+// @desc    Cancel consumer order
+// @route   PUT /api/marketplace/orders/:id/cancel
+// @access  Private (Consumer)
+export const cancelConsumerOrder = async (req, res) => {
+    try {
+        const { reason } = req.body;
+        const order = await Order.findById(req.params.id);
+
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+
+        // Check authorization
+        if (order.buyer.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'Not authorized to cancel this order' });
+        }
+
+        // Check if order can be cancelled
+        if (['shipped', 'out_for_delivery', 'delivered', 'cancelled'].includes(order.orderStatus)) {
+            return res.status(400).json({
+                message: `Cannot cancel order in ${order.orderStatus} status`
+            });
+        }
+
+        order.orderStatus = 'cancelled';
+        order.cancelledAt = Date.now();
+        order.cancellationReason = reason || 'Cancelled by user';
+
+        // Add to history
+        order.statusHistory.push({
+            status: 'cancelled',
+            timestamp: Date.now(),
+            notes: order.cancellationReason
+        });
+
+        // Restore stock logic could go here (optional for now)
+
+        await order.save();
+
+        res.json({
+            success: true,
+            message: 'Order cancelled successfully',
+            data: order
         });
     } catch (error) {
         console.error(error);

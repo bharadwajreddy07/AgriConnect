@@ -1,5 +1,6 @@
 import { createContext, useState, useContext, useEffect } from 'react';
 import { toast } from 'react-toastify';
+import api from '../services/api';
 
 const CartContext = createContext();
 
@@ -24,22 +25,36 @@ export const CartProvider = ({ children }) => {
                     const parsedCart = JSON.parse(savedCart);
                     const validItems = [];
 
-                    // Fetch fresh data for each item to ensure prices are up-to-date
-                    // We simply keep the item if we can't fetch (graceful degradation) but try to update price
-                    for (const item of parsedCart) {
+                    // Fetch fresh data for each item
+                    const promises = parsedCart.map(async (item) => {
+                        if (!item._id) return null;
                         try {
-                            // We don't have a batch endpoint, so specific item fetch or just relying on existing fields if robust
-                            // Ideally: const freshData = await api.get(/crops/${item._id});
-                            // For now, let's rely on the robust price calculation we added, but ensure we filter out bad ones.
+                            // Fetch fresh crop data
+                            const response = await api.get(`/crops/${item._id}`);
+                            const freshCrop = response.data.data;
 
-                            // Actually, let's just make sure we handle the "0" case by removing it if it persists
-                            if (item._id) validItems.push(item);
+                            if (freshCrop) {
+                                // Merge fresh data with cart quantity
+                                return {
+                                    ...freshCrop,
+                                    cartQuantity: item.cartQuantity || 1,
+                                    // Ensure we keep the price logic consistent
+                                    consumerPrice: freshCrop.consumerPrice || freshCrop.expectedPrice || 0
+                                };
+                            }
                         } catch (err) {
-                            console.error("Error validating item", item);
+                            console.warn("Could not fetch fresh data for item:", item._id, "Removing from cart.");
+                            // Strict Clean: If item not found (404) or error, DROP IT.
+                            // This prevents ghost items after DB reset.
+                            return null;
                         }
-                    }
+                        return null; // explicit fallback
+                    });
 
-                    setCartItems(validItems);
+                    const results = await Promise.all(promises);
+                    const cleanerItems = results.filter(item => item !== null);
+
+                    setCartItems(cleanerItems);
                 } catch (e) {
                     console.error('Failed to parse cart', e);
                     setCartItems([]);

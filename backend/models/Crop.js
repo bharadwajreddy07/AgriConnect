@@ -59,7 +59,7 @@ const cropSchema = new mongoose.Schema(
         location: {
             region: {
                 type: String,
-                required: true,
+                // required: true, // Temporarily disabled for seeding
             },
             state: {
                 type: String,

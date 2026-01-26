@@ -16,7 +16,7 @@ const ConsumerDashboard = () => {
 
     const loadRecentOrders = async () => {
         try {
-            const response = await api.get('/orders/consumer').catch(() => ({ data: { data: [] } }));
+            const response = await api.get('/marketplace/orders').catch(() => ({ data: { data: [] } }));
             setRecentOrders(response.data.data?.slice(0, 3) || []);
         } catch (error) {
             console.error('Error loading orders:', error);

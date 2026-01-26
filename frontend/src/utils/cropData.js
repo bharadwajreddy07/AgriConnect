@@ -208,30 +208,46 @@ export const cropImages = {
 
     // Vegetables
     'Tomato': '/images/crops/tomatoes.png',
-    'Potato': '/images/crops/cabbage.png', // Placeholder
-    'Potatoes': '/images/crops/cabbage.png', // Placeholder
-    'Onion': '/images/crops/cabbage.png', // Placeholder
+    'Potato': '/images/crops/potatoes.png',
+    'Potatoes': '/images/crops/potatoes.png',
+    'Onion': '/images/crops/onions.png',
+    'Onions': '/images/crops/onions.png',
     'Cabbage': '/images/crops/cabbage.png',
     'Cauliflower': '/images/crops/cauliflower.png',
-    'Brinjal': '/images/crops/cabbage.png', // Placeholder
-    'Cucumber': '/images/crops/cabbage.png', // Placeholder
+    'Brinjal': '/images/crops/brinjal.png',
+    'Cucumber': '/images/crops/cucumber.png',
+    'Okra': '/images/crops/okra.png',
+    'Lady Finger': '/images/crops/okra.png',
+    'Carrot': '/images/crops/carrots.png',
+    'Carrots': '/images/crops/carrots.png',
     'Vegetables': '/images/crops/cabbage.png', // Placeholder
 
     // Fruits
-    'Mango': '/images/crops/bananas.png', // Placeholder
+    'Mango': '/images/crops/mangoes.png',
+    'Mangoes': '/images/crops/mangoes.png',
     'Banana': '/images/crops/bananas.png',
-    'Grapes': '/images/crops/bananas.png', // Placeholder
-    'Apple': '/images/crops/bananas.png', // Placeholder
-    'Orange': '/images/crops/bananas.png', // Placeholder
-    'Watermelon': '/images/crops/bananas.png', // Placeholder
-    'Muskmelon': '/images/crops/bananas.png', // Placeholder
+    'Bananas': '/images/crops/bananas.png',
+    'Grapes': '/images/crops/grapes.png',
+    'Apple': '/images/crops/apple.png',
+    'Apples': '/images/crops/apple.png',
+    'Orange': '/images/crops/oranges.png',
+    'Oranges': '/images/crops/oranges.png',
+    'Watermelon': '/images/crops/watermelon.png',
+    'Muskmelon': '/images/crops/watermelon.png', // Fallback
+    'Papaya': '/images/crops/papayas.png',
+    'Papayas': '/images/crops/papayas.png',
+    'Guava': '/images/crops/guava.png',
 
     // Spices
-    'Turmeric': '/images/crops/turmeric.png', // Need a turmeric image? using placeholder for now or existing path if generated
-    'Chillies': '/images/crops/chilli.png',
+    'Turmeric': '/images/crops/turmeric.png',
     'Chilli': '/images/crops/chilli.png',
-    'Ginger': '/images/crops/turmeric.png', // Fallback
-    'Garlic': '/images/crops/turmeric.png', // Fallback
+    'Chillies': '/images/crops/chilli.png',
+    'Ginger': '/images/crops/ginger.png',
+    'Garlic': '/images/crops/garlic.png',
+    'Cumin': '/images/crops/cumin.png',
+    'Coriander': '/images/crops/coriander.png',
+    'Mustard': '/images/crops/mustard.png',
+    'Sesame': '/images/crops/sesame.png',
 
     // Others
     'Coffee': '/images/crops/coffee.png', // Placeholder
@@ -240,6 +256,9 @@ export const cropImages = {
     'Rubber': '/images/crops/sugarcane.png', // Fallback
     'Arecanut': '/images/crops/coconut.png', // Fallback
     'Tapioca': '/images/crops/sugarcane.png', // Fallback
+    'Sugarcane': '/images/crops/sugarcane.png',
+    'Cotton': '/images/crops/cotton.png',
+    'Jute': '/images/crops/jute.png',
 
     // Summer crops
     'Summer Maize': '/images/crops/maize.png',

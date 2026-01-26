@@ -9,6 +9,7 @@ import {
     getFarmerConsumerOrders,
     updateConsumerOrderStatus,
     addTrackingInfo,
+    cancelConsumerOrder,
 } from '../controllers/marketplaceController.js';
 import { protect, authorize } from '../middleware/authMiddleware.js';
 
@@ -23,6 +24,7 @@ router.post('/orders', protect, placeConsumerOrder);
 router.get('/orders', protect, getConsumerOrders);
 router.get('/orders/:id', protect, trackOrder);
 router.get('/orders/:id/track', protect, trackOrder);
+router.put('/orders/:id/cancel', protect, cancelConsumerOrder);
 
 // Farmer routes for consumer orders
 router.get('/farmer/orders', protect, authorize('farmer'), getFarmerConsumerOrders);

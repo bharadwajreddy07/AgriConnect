@@ -127,178 +127,132 @@ const NegotiationDetail = () => {
                 </span>
             </div>
 
-            <div className="grid grid-cols-1 gap-6" style={{ gridTemplateColumns: '1fr 1fr' }}>
-                {/* Left Column - Crop & Negotiation Details */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 'var(--spacing-6)' }}>
+                {/* Left Column - Crop & Details (Compact) */}
                 <div className="flex flex-col gap-6">
-                    {/* Crop Information */}
+                    {/* Crop Information - Compact */}
                     <div className="card">
-                        <h3 className="mb-4">Crop Details</h3>
-                        <div className="mb-4">
+                        <div className="flex items-start gap-4 mb-4">
                             <img
                                 src={getCropImage(crop?.name)}
                                 alt={crop?.name}
-                                className="img-cover img-rounded"
-                                style={{ width: '100%', height: '250px' }}
+                                className="img-rounded"
+                                style={{ width: '80px', height: '80px', objectFit: 'cover' }}
                             />
-                        </div>
-                        <div className="grid gap-3">
-                            <div className="flex justify-between">
-                                <span style={{ color: 'var(--gray-600)' }}>Crop Name:</span>
-                                <strong>{crop?.name}</strong>
+                            <div>
+                                <h3 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--spacing-1)' }}>{crop?.name}</h3>
+                                <span className={`badge ${getSeasonBadgeClass(crop?.season)}`}>
+                                    {crop?.season}
+                                </span>
                             </div>
+                        </div>
+
+                        <div className="grid gap-2 text-sm">
                             <div className="flex justify-between">
                                 <span style={{ color: 'var(--gray-600)' }}>Category:</span>
                                 <strong>{crop?.category}</strong>
                             </div>
                             <div className="flex justify-between">
-                                <span style={{ color: 'var(--gray-600)' }}>Season:</span>
-                                <span className={`badge ${getSeasonBadgeClass(crop?.season)}`}>
-                                    {crop?.season}
-                                </span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span style={{ color: 'var(--gray-600)' }}>Your Expected Price:</span>
-                                <strong style={{ color: 'var(--primary-green)' }}>
-                                    {formatPrice(crop?.expectedPrice)}/quintal
-                                </strong>
+                                <span style={{ color: 'var(--gray-600)' }}>Expected Price:</span>
+                                <strong>{formatPrice(crop?.expectedPrice)}</strong>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Wholesaler Information */}
-                    <div className="card">
-                        <h3 className="mb-4">Wholesaler Information</h3>
-                        <div className="grid gap-3">
+                        <div className="divider" style={{ margin: 'var(--spacing-4) 0' }}></div>
+
+                        {/* Wholesaler Info */}
+                        <div className="grid gap-2 text-sm">
+                            <p style={{ color: 'var(--gray-600)', fontWeight: 600 }}>Wholesaler:</p>
                             <div className="flex justify-between">
-                                <span style={{ color: 'var(--gray-600)' }}>Name:</span>
+                                <span>Name:</span>
                                 <strong>{wholesaler?.name}</strong>
                             </div>
                             <div className="flex justify-between">
-                                <span style={{ color: 'var(--gray-600)' }}>Email:</span>
-                                <strong>{wholesaler?.email}</strong>
-                            </div>
-                            <div className="flex justify-between">
-                                <span style={{ color: 'var(--gray-600)' }}>Phone:</span>
+                                <span>Phone:</span>
                                 <strong>{wholesaler?.phone}</strong>
                             </div>
                         </div>
                     </div>
 
-                    {/* Current Offer */}
+                    {/* Current Offer Status - Compact */}
                     {negotiation.currentOffer ? (
-                        <div className="card" style={{ background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05))' }}>
-                            <h3 className="mb-4">Current Offer</h3>
-                            <div className="text-center">
-                                <div style={{ fontSize: 'var(--font-size-4xl)', fontWeight: 700, color: 'var(--primary-green)', marginBottom: 'var(--spacing-2)' }}>
-                                    {formatPrice(negotiation.currentOffer.amount || 0)}
-                                </div>
-                                <p style={{ color: 'var(--gray-600)' }}>
-                                    per quintal • Offered by {negotiation.currentOffer.offeredBy === 'farmer' ? 'You' : wholesaler?.name}
-                                </p>
+                        <div className="card" style={{ background: 'var(--gray-50)', textAlign: 'center' }}>
+                            <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--gray-600)', marginBottom: 'var(--spacing-1)' }}>Current Offer</p>
+                            <div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 700, color: 'var(--primary-green)' }}>
+                                {formatPrice(negotiation.currentOffer.amount || 0)}
                             </div>
+                            <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--gray-500)' }}>
+                                by {negotiation.currentOffer.offeredBy === 'farmer' ? 'You' : wholesaler?.name}
+                            </p>
                         </div>
                     ) : (
-                        <div className="card">
-                            <h3 className="mb-4">Current Offer</h3>
-                            <p>No active offer.</p>
-                        </div>
-                    )}
-
-                    {/* Counter Offer Form */}
-                    {canRespond && (
-                        <div className="card">
-                            <h3 className="mb-4">Make Counter Offer</h3>
-                            <form onSubmit={handleCounterOffer}>
-                                <div className="form-group">
-                                    <label className="form-label">Your Counter Offer (₹/quintal)</label>
-                                    <input
-                                        type="number"
-                                        className="form-input"
-                                        placeholder="Enter your price"
-                                        value={counterOffer}
-                                        onChange={(e) => setCounterOffer(e.target.value)}
-                                        min="0"
-                                        step="0.01"
-                                        required
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">Message (Optional)</label>
-                                    <textarea
-                                        className="form-textarea"
-                                        placeholder="Add a message to your counter-offer..."
-                                        value={counterMessage}
-                                        onChange={(e) => setCounterMessage(e.target.value)}
-                                        rows="3"
-                                    />
-                                </div>
-                                <div className="flex gap-4">
-                                    <button type="submit" className="btn btn-primary flex-1" disabled={submitting}>
-                                        {submitting ? 'Sending...' : 'Send Counter Offer'}
-                                    </button>
-                                </div>
-                            </form>
-
-                            <div className="divider"></div>
-
-                            <div className="flex gap-4">
-                                <button className="btn btn-primary flex-1" onClick={handleAccept}>
-                                    ✓ Accept Current Offer
-                                </button>
-                                <button className="btn btn-danger flex-1" onClick={handleReject}>
-                                    ✗ Reject Offer
-                                </button>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Accepted Offer */}
-                    {negotiation.status === 'accepted' && (
-                        <div className="card" style={{ background: 'rgba(16, 185, 129, 0.1)', borderLeft: '4px solid var(--success)' }}>
-                            <h3 className="mb-3" style={{ color: 'var(--success)' }}>✓ Negotiation Accepted</h3>
-                            <div className="grid gap-2">
-                                <p><strong>Final Agreed Price:</strong> {formatPrice(negotiation.finalAgreedPrice)}/quintal</p>
-                                <p><strong>Total Amount:</strong> {formatPrice(negotiation.totalAmount)}</p>
-                                <p><strong>Accepted on:</strong> {formatDateTime(negotiation.acceptedAt)}</p>
-                            </div>
+                        <div className="card text-center p-4">
+                            <p className="text-gray-500">No active offer</p>
                         </div>
                     )}
                 </div>
 
-                {/* Right Column - Offer History & Chat */}
-                <div className="flex flex-col gap-6">
-                    {/* Offer History Timeline */}
-                    <div className="card">
-                        <h3 className="mb-4">Offer History</h3>
-                        <div className="negotiation-timeline">
-                            {negotiation.offerHistory?.map((offer, index) => (
-                                <div key={index} className={`timeline-item ${offer.offeredBy}`}>
-                                    <div className="timeline-dot"></div>
-                                    <div className="timeline-content">
-                                        <div className="timeline-header">
-                                            <span className="timeline-user">
-                                                {offer.offeredBy === 'farmer' ? 'You' : wholesaler?.name}
-                                            </span>
-                                            <span className="timeline-time">
-                                                {formatDateTime(offer.timestamp)}
-                                            </span>
-                                        </div>
-                                        <div className="timeline-offer">
-                                            {formatPrice(offer.amount)}/quintal
-                                        </div>
-                                        {offer.message && (
-                                            <div className="timeline-message">
-                                                "{offer.message}"
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
+                {/* Right Column - Chat & Actions (Prominent) */}
+                <div className="flex flex-col gap-6" style={{ height: 'calc(100vh - 140px)', minHeight: '600px' }}>
+
+                    {/* Waiting Message - NOW AT TOP */}
+                    {isOngoing && !canRespond && (
+                        <div className="card bg-gray-50 border-gray-200 text-center py-4" style={{ borderLeft: '4px solid var(--warning)' }}>
+                            <div className="flex items-center justify-center gap-3">
+                                <div className="spinner" style={{ width: '20px', height: '20px' }}></div>
+                                <span className="font-semibold text-gray-700">Waiting for {wholesaler?.name} to respond...</span>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Active Negotiation Area */}
+                    <div className="card flex-1 flex flex-col p-0" style={{ overflow: 'hidden' }}>
+                        <div className="p-4 border-b bg-gray-50 flex justify-between items-center">
+                            <h3 style={{ fontSize: 'var(--font-size-md)' }}>Negotiation Chat</h3>
+                            {isOngoing && !canRespond && (
+                                <span className="badge badge-warning text-xs">Waiting</span>
+                            )}
+                            {isOngoing && canRespond && (
+                                <span className="badge badge-success text-xs">Your Turn</span>
+                            )}
+                        </div>
+
+                        <div className="flex-1" style={{ position: 'relative', overflow: 'hidden' }}>
+                            <ChatBox negotiationId={id} currentUser={user} />
                         </div>
                     </div>
 
-                    {/* Chat Component */}
-                    <ChatBox negotiationId={id} currentUser={user} />
+                    {/* Counter Offer Form - Fixed at bottom */}
+                    {canRespond && (
+                        <div className="card bg-green-50 border-green-200">
+                            <h3 className="mb-3 text-sm font-semibold text-green-800">Make Counter Offer / Action</h3>
+                            <div className="flex gap-4 items-end">
+                                <div className="flex-1">
+                                    <label className="form-label text-xs">Counter Price (₹)</label>
+                                    <input
+                                        type="number"
+                                        className="form-input form-input-sm"
+                                        placeholder="Amount"
+                                        value={counterOffer}
+                                        onChange={(e) => setCounterOffer(e.target.value)}
+                                    />
+                                </div>
+                                <button
+                                    className="btn btn-primary"
+                                    onClick={handleCounterOffer}
+                                    disabled={submitting}
+                                >
+                                    Send Offer
+                                </button>
+                                <button className="btn btn-success" onClick={handleAccept}>
+                                    Accept
+                                </button>
+                                <button className="btn btn-danger btn-outline" onClick={handleReject}>
+                                    Reject
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

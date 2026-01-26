@@ -6,6 +6,7 @@ import {
     getAnalytics,
     getSeasonalReport,
     getPriceTrends,
+    getRecentNegotiations,
 } from '../controllers/adminController.js';
 import { protect, authorize } from '../middleware/authMiddleware.js';
 
@@ -28,5 +29,8 @@ router.get('/analytics', getAnalytics);
 // Reports
 router.get('/reports/seasonal', getSeasonalReport);
 router.get('/reports/price-trends', getPriceTrends);
+
+// Negotiation management
+router.get('/negotiations/recent', getRecentNegotiations);
 
 export default router;
