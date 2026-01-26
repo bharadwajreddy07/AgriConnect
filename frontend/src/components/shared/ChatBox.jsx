@@ -16,7 +16,7 @@ const ChatBox = ({ negotiationId, currentUser }) => {
         loadMessages();
 
         // Initialize Socket.io connection
-        socketRef.current = io(import.meta.env.VITE_API_URL || 'http://localhost:5000');
+        socketRef.current = io(import.meta.env.VITE_API_URL || 'https://agriconnect-n94c.onrender.com');
 
         // Join negotiation room
         socketRef.current.emit('join_negotiation', negotiationId);

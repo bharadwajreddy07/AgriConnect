@@ -2,11 +2,11 @@
     "rewrites": [
         {
             "source": "/api/:path*",
-            "destination": "https://your-backend-on-render.onrender.com/api/:path*"
+            "destination": "https://agriconnect-n94c.onrender.com/api/:path*"
         },
         {
             "source": "/uploads/:path*",
-            "destination": "https://your-backend-on-render.onrender.com/uploads/:path*"
+            "destination": "https://agriconnect-n94c.onrender.com/uploads/:path*"
         },
         {
             "source": "/(.*)",
