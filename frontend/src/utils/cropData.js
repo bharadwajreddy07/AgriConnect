@@ -188,26 +188,32 @@ export const formatDateTime = (date) => {
 // Crop Images (Wikipedia/Wikimedia Commons)
 export const cropImages = {
     // Cereals
-    'Rice': 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/Rice_Plants_%28IRRI%29.jpg/640px-Rice_Plants_%28IRRI%29.jpg',
-    'Paddy': 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/Rice_Plants_%28IRRI%29.jpg/640px-Rice_Plants_%28IRRI%29.jpg',
-    'Wheat': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Vehn%C3%A4pelto_6.jpg/640px-Vehn%C3%A4pelto_6.jpg',
-    'Maize': 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Maize_field_in_summer.jpg/640px-Maize_field_in_summer.jpg',
-    'Bajra': 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Pearl_millet.jpg/640px-Pearl_millet.jpg',
-    'Jowar': 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Sorghum_bicolor_002.jpg/640px-Sorghum_bicolor_002.jpg',
-    'Barley': 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Barley_field.jpg/640px-Barley_field.jpg',
-    'Ragi': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Millet_seeds.jpg/640px-Millet_seeds.jpg',
+    'Rice': '/images/crops/paddy.png',
+    'Paddy': '/images/crops/paddy.png',
+    'Wheat': '/images/crops/wheat.png',
+    'Maize': '/images/crops/maize.png',
+    'Bajra': '/images/crops/millets.png',
+    'Jowar': '/images/crops/millets.png',
+    'Barley': '/images/crops/barley.png',
+    'Ragi': '/images/crops/millets.png',
+    'Millets': '/images/crops/millets.png',
 
     // Pulses
-    'Lentil': 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Lens_culinaris_seeds.jpg/640px-Lens_culinaris_seeds.jpg',
-    'Lentils': 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Lens_culinaris_seeds.jpg/640px-Lens_culinaris_seeds.jpg',
-    'Gram': 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Chickpea_India.jpg/640px-Chickpea_India.jpg',
-    'Peas': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Peas_in_pods_-_Studio.jpg/640px-Peas_in_pods_-_Studio.jpg',
-    'Arhar': 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Pigeon_peas.jpg/640px-Pigeon_peas.jpg',
-    'Moong': 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Mung_bean.jpg/640px-Mung_bean.jpg',
-    'Urad': 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Black_gram.jpg/640px-Black_gram.jpg',
+    'Lentil': '/images/crops/lentils.png',
+    'Lentils': '/images/crops/lentils.png',
+    'Gram': '/images/crops/chickpeas.png',
+    'Chickpeas': '/images/crops/chickpeas.png',
+    'Peas': '/images/crops/lentils.png',
+    'Arhar': '/images/crops/pigeonpea.png',
+    'Pigeon Pea': '/images/crops/pigeonpea.png',
+    'Moong': '/images/crops/greengram.png',
+    'Green Gram': '/images/crops/greengram.png',
+    'Urad': '/images/crops/blackgram.png',
+    'Black Gram': '/images/crops/blackgram.png',
 
     // Vegetables
     'Tomato': '/images/crops/tomatoes.png',
+    'Tomatoes': '/images/crops/tomatoes.png',
     'Potato': '/images/crops/potatoes.png',
     'Potatoes': '/images/crops/potatoes.png',
     'Onion': '/images/crops/onions.png',
@@ -220,7 +226,8 @@ export const cropImages = {
     'Lady Finger': '/images/crops/okra.png',
     'Carrot': '/images/crops/carrots.png',
     'Carrots': '/images/crops/carrots.png',
-    'Vegetables': '/images/crops/cabbage.png', // Placeholder
+    'Pumpkin': '/images/crops/pumpkin.png',
+    'Vegetables': '/images/crops/cabbage.png',
 
     // Fruits
     'Mango': '/images/crops/mangoes.png',
@@ -233,7 +240,6 @@ export const cropImages = {
     'Orange': '/images/crops/oranges.png',
     'Oranges': '/images/crops/oranges.png',
     'Watermelon': '/images/crops/watermelon.png',
-    'Muskmelon': '/images/crops/watermelon.png', // Fallback
     'Papaya': '/images/crops/papayas.png',
     'Papayas': '/images/crops/papayas.png',
     'Guava': '/images/crops/guava.png',
@@ -247,40 +253,43 @@ export const cropImages = {
     'Cumin': '/images/crops/cumin.png',
     'Coriander': '/images/crops/coriander.png',
     'Mustard': '/images/crops/mustard.png',
+
+    // Oilseeds
+    'Groundnut': '/images/crops/groundnut.png',
+    'Sunflower': '/images/crops/sunflower.png',
+    'Soybean': '/images/crops/soybean.png',
     'Sesame': '/images/crops/sesame.png',
 
     // Others
-    'Coffee': '/images/crops/coffee.png', // Placeholder
-    'Tea': '/images/crops/tea.png', // Placeholder
-    'Coconut': '/images/crops/coconut.png', // Placeholder
-    'Rubber': '/images/crops/sugarcane.png', // Fallback
-    'Arecanut': '/images/crops/coconut.png', // Fallback
-    'Tapioca': '/images/crops/sugarcane.png', // Fallback
     'Sugarcane': '/images/crops/sugarcane.png',
     'Cotton': '/images/crops/cotton.png',
     'Jute': '/images/crops/jute.png',
-
-    // Summer crops
-    'Summer Maize': '/images/crops/maize.png',
 };
 
 // Get crop image by name
 export const getCropImage = (cropName) => {
     if (!cropName) return 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=800&q=80';
 
-    // Try exact match first
-    if (cropImages[cropName]) {
-        return cropImages[cropName];
-    }
-
-    // Try case-insensitive match
     const normalizedName = cropName.toLowerCase();
+
+    // 1. Try exact or case-insensitive match
     const matchedKey = Object.keys(cropImages).find(
         key => key.toLowerCase() === normalizedName
     );
+    if (matchedKey) return cropImages[matchedKey];
 
-    if (matchedKey) {
-        return cropImages[matchedKey];
+    // 2. Try partial match (if cropName contains any key from cropImages)
+    // We sort keys by length descending to match the most specific term first
+    const sortedKeys = Object.keys(cropImages).sort((a, b) => b.length - a.length);
+    const partialMatch = sortedKeys.find(key => normalizedName.includes(key.toLowerCase()));
+    if (partialMatch) return cropImages[partialMatch];
+
+    // 3. Try splitting and matching words
+    const words = normalizedName.split(/\s+/);
+    for (const word of words) {
+        if (word.length < 3) continue; // Skip short words like "of", "and"
+        const wordMatch = sortedKeys.find(key => key.toLowerCase() === word);
+        if (wordMatch) return cropImages[wordMatch];
     }
 
     // Default fallback image

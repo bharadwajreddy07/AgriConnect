@@ -7,12 +7,17 @@ import { Server } from 'socket.io';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import passport from 'passport';
+import session from 'express-session';
 
 // Load environment variables
 dotenv.config();
 
 // Import database connection
 import connectDB from './config/db.js';
+
+// Import passport configuration
+import configurePassport from './config/passport.js';
 
 // Import routes
 import authRoutes from './routes/authRoutes.js';
@@ -24,6 +29,8 @@ import chatRoutes from './routes/chatRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import couponRoutes from './routes/couponRoutes.js';
 import marketplaceRoutes from './routes/marketplaceRoutes.js';
+import wholesaleOrderRoutes from './routes/wholesaleOrderRoutes.js';
+import passwordResetRoutes from './routes/passwordResetRoutes.js';
 
 // ES Module fix for __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -52,6 +59,24 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
+// Session middleware for passport
+app.use(
+    session({
+        secret: process.env.SESSION_SECRET || 'agrimart_secret_key_2026',
+        resave: false,
+        saveUninitialized: false,
+        cookie: {
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        },
+    })
+);
+
+// Initialize Passport
+app.use(passport.initialize());
+app.use(passport.session());
+configurePassport();
+
 // Create uploads directory if it doesn't exist
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
@@ -63,6 +88,7 @@ app.use('/uploads', express.static(uploadsDir));
 
 // API Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/auth', passwordResetRoutes);
 app.use('/api/crops', cropRoutes);
 app.use('/api/samples', sampleRoutes);
 app.use('/api/negotiations', negotiationRoutes);
@@ -71,6 +97,12 @@ app.use('/api/chats', chatRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/marketplace', marketplaceRoutes);
+app.use('/api/wholesale-orders', (req, res, next) => {
+    console.log(`\n🔵 Wholesale Order Request: ${req.method} ${req.url}`);
+    console.log('Body:', req.body);
+    console.log('User:', req.user?.email || 'Not authenticated');
+    next();
+}, wholesaleOrderRoutes);
 import User from './models/User.js';
 app.get('/api/seed', async (req, res) => {
     try {
@@ -220,16 +252,11 @@ const PORT = process.env.PORT || 5000;
 
 httpServer.listen(PORT, () => {
     console.log(`
-╔═══════════════════════════════════════════╗
-║                                           ║
-║   🌾 AgriMart Backend Server Running 🌾   ║
-║                                           ║
-║   Port: ${PORT}                            ║
-║   Environment: ${process.env.NODE_ENV || 'development'}              ║
-║   Database: MongoDB                       ║
-║   Socket.io: Enabled                      ║
-║                                           ║
-╚═══════════════════════════════════════════╝
+  🌾 AgriMart Backend Server Running 🌾
+   Port: ${PORT} 
+   Environment: ${process.env.NODE_ENV || 'development'} 
+   Database: MongoDB           
+   Socket.io: Enabled 
   `);
 });
 

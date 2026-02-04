@@ -46,6 +46,9 @@ export const getCrops = async (req, res) => {
             maxPrice,
             status,
             search,
+            qualityGrade,
+            organicCertified,
+            sort,
             page = 1,
             limit = 20
         } = req.query;
@@ -57,6 +60,9 @@ export const getCrops = async (req, res) => {
         if (state) query['location.state'] = state;
         if (district) query['location.district'] = district;
         if (category) query.category = category;
+        if (qualityGrade) query.qualityGrade = qualityGrade;
+        if (organicCertified === 'true') query.organicCertified = true;
+
         if (status) {
             query.status = status;
         } else {
@@ -76,11 +82,30 @@ export const getCrops = async (req, res) => {
             ];
         }
 
+        // Sorting logic
+        let sortQuery = { createdAt: -1 };
+        if (sort) {
+            switch (sort) {
+                case 'price_low':
+                    sortQuery = { expectedPrice: 1 };
+                    break;
+                case 'price_high':
+                    sortQuery = { expectedPrice: -1 };
+                    break;
+                case 'quantity_high':
+                    sortQuery = { 'quantity.value': -1 };
+                    break;
+                case 'latest':
+                default:
+                    sortQuery = { createdAt: -1 };
+            }
+        }
+
         const total = await Crop.countDocuments(query);
 
         const crops = await Crop.find(query)
             .populate('farmer', 'name phone region rating')
-            .sort({ createdAt: -1 })
+            .sort(sortQuery)
             .limit(parseInt(limit))
             .skip((parseInt(page) - 1) * parseInt(limit));
 

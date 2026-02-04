@@ -74,136 +74,269 @@ const Register = () => {
     const needsAddress = formData.role === 'farmer' || formData.role === 'wholesaler';
 
     return (
-        <div className="container" style={{ maxWidth: '600px', marginTop: 'var(--spacing-12)', marginBottom: 'var(--spacing-12)' }}>
-            <div className="card" style={{ background: 'white' }}>
-                <div className="card-header text-center">
-                    <h2>Register on AgriConnect</h2>
-                    <p style={{ color: 'var(--gray-600)' }}>Create your account to get started</p>
+        <div style={{
+            minHeight: '100vh',
+            background: 'var(--gray-50)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 'var(--spacing-4)'
+        }}>
+            <div style={{
+                maxWidth: '500px',
+                width: '100%',
+                background: 'white',
+                borderRadius: 'var(--radius-xl)',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                padding: 'var(--spacing-8)'
+            }}>
+                {/* Header */}
+                <div style={{ textAlign: 'center', marginBottom: 'var(--spacing-8)' }}>
+                    <h2 style={{
+                        fontSize: 'var(--font-size-2xl)',
+                        fontWeight: 600,
+                        color: 'var(--gray-900)',
+                        marginBottom: 'var(--spacing-2)'
+                    }}>
+                        Register on AgriConnect
+                    </h2>
+                    <p style={{ color: 'var(--gray-600)', fontSize: 'var(--font-size-sm)' }}>
+                        Create your account to get started
+                    </p>
                 </div>
 
                 <form onSubmit={handleSubmit}>
-                    {/* Basic Information */}
-                    <div className="form-group">
-                        <label className="form-label">Full Name *</label>
+                    {/* Full Name */}
+                    <div style={{ marginBottom: 'var(--spacing-5)' }}>
+                        <label style={{
+                            display: 'block',
+                            fontSize: 'var(--font-size-sm)',
+                            fontWeight: 500,
+                            color: 'var(--gray-700)',
+                            marginBottom: 'var(--spacing-2)'
+                        }}>
+                            Full Name *
+                        </label>
                         <input
                             type="text"
                             name="name"
-                            className="form-input"
                             placeholder="Enter your full name"
                             value={formData.name}
                             onChange={handleChange}
                             required
+                            style={{
+                                width: '100%',
+                                padding: 'var(--spacing-3)',
+                                fontSize: 'var(--font-size-sm)',
+                                border: '1px solid var(--gray-300)',
+                                borderRadius: 'var(--radius-md)',
+                                outline: 'none',
+                                transition: 'all 0.2s',
+                            }}
+                            onFocus={(e) => e.target.style.borderColor = 'var(--primary-green)'}
+                            onBlur={(e) => e.target.style.borderColor = 'var(--gray-300)'}
                         />
                     </div>
 
-                    <div className="form-group">
-                        <label className="form-label">Email *</label>
+                    {/* Email */}
+                    <div style={{ marginBottom: 'var(--spacing-5)' }}>
+                        <label style={{
+                            display: 'block',
+                            fontSize: 'var(--font-size-sm)',
+                            fontWeight: 500,
+                            color: 'var(--gray-700)',
+                            marginBottom: 'var(--spacing-2)'
+                        }}>
+                            Email *
+                        </label>
                         <input
                             type="email"
                             name="email"
-                            className="form-input"
                             placeholder="Enter your email"
                             value={formData.email}
                             onChange={handleChange}
                             required
+                            style={{
+                                width: '100%',
+                                padding: 'var(--spacing-3)',
+                                fontSize: 'var(--font-size-sm)',
+                                border: '1px solid var(--gray-300)',
+                                borderRadius: 'var(--radius-md)',
+                                outline: 'none',
+                                transition: 'all 0.2s',
+                            }}
+                            onFocus={(e) => e.target.style.borderColor = 'var(--primary-green)'}
+                            onBlur={(e) => e.target.style.borderColor = 'var(--gray-300)'}
                         />
                     </div>
 
-                    <div className="form-group">
-                        <label className="form-label">Password *</label>
+                    {/* Password */}
+                    <div style={{ marginBottom: 'var(--spacing-5)' }}>
+                        <label style={{
+                            display: 'block',
+                            fontSize: 'var(--font-size-sm)',
+                            fontWeight: 500,
+                            color: 'var(--gray-700)',
+                            marginBottom: 'var(--spacing-2)'
+                        }}>
+                            Password *
+                        </label>
                         <div style={{ position: 'relative' }}>
                             <input
                                 type={showPassword ? 'text' : 'password'}
                                 name="password"
-                                className="form-input"
                                 placeholder="Enter password (min 6 characters)"
                                 value={formData.password}
                                 onChange={handleChange}
                                 required
-                                minLength={6}
-                                style={{ paddingRight: 'var(--spacing-12)' }}
+                                style={{
+                                    width: '100%',
+                                    padding: 'var(--spacing-3)',
+                                    paddingRight: '40px',
+                                    fontSize: 'var(--font-size-sm)',
+                                    border: '1px solid var(--gray-300)',
+                                    borderRadius: 'var(--radius-md)',
+                                    outline: 'none',
+                                    transition: 'all 0.2s',
+                                }}
+                                onFocus={(e) => e.target.style.borderColor = 'var(--primary-green)'}
+                                onBlur={(e) => e.target.style.borderColor = 'var(--gray-300)'}
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
                                 style={{
                                     position: 'absolute',
-                                    right: 'var(--spacing-3)',
+                                    right: '12px',
                                     top: '50%',
                                     transform: 'translateY(-50%)',
                                     background: 'none',
                                     border: 'none',
                                     cursor: 'pointer',
-                                    color: 'var(--gray-600)',
-                                    fontSize: 'var(--font-size-lg)',
-                                    padding: 'var(--spacing-2)',
+                                    color: 'var(--gray-500)',
+                                    padding: '4px',
                                 }}
                             >
-                                {showPassword ? <FaEyeSlash /> : <FaEye />}
+                                {showPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
                             </button>
                         </div>
                     </div>
 
-                    <div className="form-group">
-                        <label className="form-label">Confirm Password *</label>
+                    {/* Confirm Password */}
+                    <div style={{ marginBottom: 'var(--spacing-5)' }}>
+                        <label style={{
+                            display: 'block',
+                            fontSize: 'var(--font-size-sm)',
+                            fontWeight: 500,
+                            color: 'var(--gray-700)',
+                            marginBottom: 'var(--spacing-2)'
+                        }}>
+                            Confirm Password *
+                        </label>
                         <div style={{ position: 'relative' }}>
                             <input
                                 type={showConfirmPassword ? 'text' : 'password'}
                                 name="confirmPassword"
-                                className="form-input"
                                 placeholder="Re-enter your password"
                                 value={formData.confirmPassword}
                                 onChange={handleChange}
                                 required
-                                minLength={6}
-                                style={{ paddingRight: 'var(--spacing-12)' }}
+                                style={{
+                                    width: '100%',
+                                    padding: 'var(--spacing-3)',
+                                    paddingRight: '40px',
+                                    fontSize: 'var(--font-size-sm)',
+                                    border: '1px solid var(--gray-300)',
+                                    borderRadius: 'var(--radius-md)',
+                                    outline: 'none',
+                                    transition: 'all 0.2s',
+                                }}
+                                onFocus={(e) => e.target.style.borderColor = 'var(--primary-green)'}
+                                onBlur={(e) => e.target.style.borderColor = 'var(--gray-300)'}
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                                 style={{
                                     position: 'absolute',
-                                    right: 'var(--spacing-3)',
+                                    right: '12px',
                                     top: '50%',
                                     transform: 'translateY(-50%)',
                                     background: 'none',
                                     border: 'none',
                                     cursor: 'pointer',
-                                    color: 'var(--gray-600)',
-                                    fontSize: 'var(--font-size-lg)',
-                                    padding: 'var(--spacing-2)',
+                                    color: 'var(--gray-500)',
+                                    padding: '4px',
                                 }}
                             >
-                                {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                                {showConfirmPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
                             </button>
                         </div>
-                        {formData.password && formData.confirmPassword && formData.password !== formData.confirmPassword && (
-                            <p className="form-error">Passwords do not match</p>
-                        )}
                     </div>
 
-                    <div className="form-group">
-                        <label className="form-label">Phone Number *</label>
+                    {/* Phone Number */}
+                    <div style={{ marginBottom: 'var(--spacing-5)' }}>
+                        <label style={{
+                            display: 'block',
+                            fontSize: 'var(--font-size-sm)',
+                            fontWeight: 500,
+                            color: 'var(--gray-700)',
+                            marginBottom: 'var(--spacing-2)'
+                        }}>
+                            Phone Number *
+                        </label>
                         <input
                             type="tel"
                             name="phone"
-                            className="form-input"
                             placeholder="Enter 10-digit phone number"
                             value={formData.phone}
                             onChange={handleChange}
                             required
                             pattern="[0-9]{10}"
+                            maxLength="10"
+                            style={{
+                                width: '100%',
+                                padding: 'var(--spacing-3)',
+                                fontSize: 'var(--font-size-sm)',
+                                border: '1px solid var(--gray-300)',
+                                borderRadius: 'var(--radius-md)',
+                                outline: 'none',
+                                transition: 'all 0.2s',
+                            }}
+                            onFocus={(e) => e.target.style.borderColor = 'var(--primary-green)'}
+                            onBlur={(e) => e.target.style.borderColor = 'var(--gray-300)'}
                         />
                     </div>
 
-                    <div className="form-group">
-                        <label className="form-label">I am a *</label>
+                    {/* Role Selection */}
+                    <div style={{ marginBottom: 'var(--spacing-5)' }}>
+                        <label style={{
+                            display: 'block',
+                            fontSize: 'var(--font-size-sm)',
+                            fontWeight: 500,
+                            color: 'var(--gray-700)',
+                            marginBottom: 'var(--spacing-2)'
+                        }}>
+                            I am a *
+                        </label>
                         <select
                             name="role"
-                            className="form-select"
                             value={formData.role}
                             onChange={handleChange}
                             required
+                            style={{
+                                width: '100%',
+                                padding: 'var(--spacing-3)',
+                                fontSize: 'var(--font-size-sm)',
+                                border: '1px solid var(--gray-300)',
+                                borderRadius: 'var(--radius-md)',
+                                outline: 'none',
+                                transition: 'all 0.2s',
+                                background: 'white',
+                                cursor: 'pointer',
+                            }}
+                            onFocus={(e) => e.target.style.borderColor = 'var(--primary-green)'}
+                            onBlur={(e) => e.target.style.borderColor = 'var(--gray-300)'}
                         >
                             <option value="consumer">Consumer</option>
                             <option value="farmer">Farmer</option>
@@ -211,109 +344,160 @@ const Register = () => {
                         </select>
                     </div>
 
-                    {/* Address Information (for Farmer and Wholesaler) */}
+                    {/* Conditional Address Fields */}
                     {needsAddress && (
                         <>
-                            <h4 style={{ marginTop: 'var(--spacing-6)', marginBottom: 'var(--spacing-4)' }}>
-                                Address Information
-                            </h4>
+                            {/* Region */}
+                            <div style={{ marginBottom: 'var(--spacing-5)' }}>
+                                <label style={{
+                                    display: 'block',
+                                    fontSize: 'var(--font-size-sm)',
+                                    fontWeight: 500,
+                                    color: 'var(--gray-700)',
+                                    marginBottom: 'var(--spacing-2)'
+                                }}>
+                                    Region *
+                                </label>
+                                <input
+                                    type="text"
+                                    name="region"
+                                    placeholder="e.g., South India, North India"
+                                    value={formData.region}
+                                    onChange={handleChange}
+                                    required={needsAddress}
+                                    style={{
+                                        width: '100%',
+                                        padding: 'var(--spacing-3)',
+                                        fontSize: 'var(--font-size-sm)',
+                                        border: '1px solid var(--gray-300)',
+                                        borderRadius: 'var(--radius-md)',
+                                        outline: 'none',
+                                        transition: 'all 0.2s',
+                                    }}
+                                    onFocus={(e) => e.target.style.borderColor = 'var(--primary-green)'}
+                                    onBlur={(e) => e.target.style.borderColor = 'var(--gray-300)'}
+                                />
+                            </div>
 
-                            <div className="form-group">
-                                <label className="form-label">State *</label>
+                            {/* State */}
+                            <div style={{ marginBottom: 'var(--spacing-5)' }}>
+                                <label style={{
+                                    display: 'block',
+                                    fontSize: 'var(--font-size-sm)',
+                                    fontWeight: 500,
+                                    color: 'var(--gray-700)',
+                                    marginBottom: 'var(--spacing-2)'
+                                }}>
+                                    State *
+                                </label>
                                 <select
                                     name="address.state"
-                                    className="form-select"
                                     value={formData.address.state}
                                     onChange={handleChange}
-                                    required
+                                    required={needsAddress}
+                                    style={{
+                                        width: '100%',
+                                        padding: 'var(--spacing-3)',
+                                        fontSize: 'var(--font-size-sm)',
+                                        border: '1px solid var(--gray-300)',
+                                        borderRadius: 'var(--radius-md)',
+                                        outline: 'none',
+                                        transition: 'all 0.2s',
+                                        background: 'white',
+                                        cursor: 'pointer',
+                                    }}
+                                    onFocus={(e) => e.target.style.borderColor = 'var(--primary-green)'}
+                                    onBlur={(e) => e.target.style.borderColor = 'var(--gray-300)'}
                                 >
                                     <option value="">Select State</option>
                                     {indianStates.map((state) => (
-                                        <option key={state} value={state}>
-                                            {state}
-                                        </option>
+                                        <option key={state} value={state}>{state}</option>
                                     ))}
                                 </select>
                             </div>
 
-                            <div className="form-group">
-                                <label className="form-label">District *</label>
+                            {/* District */}
+                            <div style={{ marginBottom: 'var(--spacing-5)' }}>
+                                <label style={{
+                                    display: 'block',
+                                    fontSize: 'var(--font-size-sm)',
+                                    fontWeight: 500,
+                                    color: 'var(--gray-700)',
+                                    marginBottom: 'var(--spacing-2)'
+                                }}>
+                                    District *
+                                </label>
                                 <input
                                     type="text"
                                     name="address.district"
-                                    className="form-input"
                                     placeholder="Enter district"
                                     value={formData.address.district}
                                     onChange={handleChange}
-                                    required
-                                />
-                            </div>
-
-                            <div className="form-group">
-                                <label className="form-label">Village/Town</label>
-                                <input
-                                    type="text"
-                                    name="address.village"
-                                    className="form-input"
-                                    placeholder="Enter village or town"
-                                    value={formData.address.village}
-                                    onChange={handleChange}
-                                />
-                            </div>
-
-                            <div className="form-group">
-                                <label className="form-label">Street Address</label>
-                                <input
-                                    type="text"
-                                    name="address.street"
-                                    className="form-input"
-                                    placeholder="Enter street address"
-                                    value={formData.address.street}
-                                    onChange={handleChange}
-                                />
-                            </div>
-
-                            <div className="form-group">
-                                <label className="form-label">Pincode</label>
-                                <input
-                                    type="text"
-                                    name="address.pincode"
-                                    className="form-input"
-                                    placeholder="Enter pincode"
-                                    value={formData.address.pincode}
-                                    onChange={handleChange}
-                                    pattern="[0-9]{6}"
-                                />
-                            </div>
-
-                            <div className="form-group">
-                                <label className="form-label">Region *</label>
-                                <input
-                                    type="text"
-                                    name="region"
-                                    className="form-input"
-                                    placeholder="Enter region (e.g., North India, South India)"
-                                    value={formData.region}
-                                    onChange={handleChange}
-                                    required
+                                    required={needsAddress}
+                                    style={{
+                                        width: '100%',
+                                        padding: 'var(--spacing-3)',
+                                        fontSize: 'var(--font-size-sm)',
+                                        border: '1px solid var(--gray-300)',
+                                        borderRadius: 'var(--radius-md)',
+                                        outline: 'none',
+                                        transition: 'all 0.2s',
+                                    }}
+                                    onFocus={(e) => e.target.style.borderColor = 'var(--primary-green)'}
+                                    onBlur={(e) => e.target.style.borderColor = 'var(--gray-300)'}
                                 />
                             </div>
                         </>
                     )}
 
-                    <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
-                        {loading ? 'Creating Account...' : 'Register'}
+                    {/* Submit Button */}
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        style={{
+                            width: '100%',
+                            padding: 'var(--spacing-3)',
+                            background: loading ? 'var(--gray-400)' : 'linear-gradient(135deg, #064e3b 0%, #059669 100%)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: 'var(--radius-md)',
+                            fontSize: 'var(--font-size-sm)',
+                            fontWeight: 600,
+                            cursor: loading ? 'not-allowed' : 'pointer',
+                            transition: 'all 0.2s',
+                            marginTop: 'var(--spacing-2)',
+                        }}
+                        onMouseOver={(e) => {
+                            if (!loading) {
+                                e.target.style.transform = 'translateY(-1px)';
+                                e.target.style.boxShadow = '0 4px 12px rgba(6, 78, 59, 0.3)';
+                            }
+                        }}
+                        onMouseOut={(e) => {
+                            e.target.style.transform = 'translateY(0)';
+                            e.target.style.boxShadow = 'none';
+                        }}
+                    >
+                        {loading ? 'Creating Account...' : 'Create Account'}
                     </button>
-                </form>
 
-                <div className="card-footer text-center">
-                    <p style={{ color: 'var(--gray-600)' }}>
-                        Already have an account?{' '}
-                        <Link to="/login" style={{ fontWeight: 600 }}>
-                            Login here
-                        </Link>
-                    </p>
-                </div>
+                    {/* Login Link */}
+                    <div style={{ textAlign: 'center', marginTop: 'var(--spacing-6)' }}>
+                        <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--gray-600)' }}>
+                            Already have an account?{' '}
+                            <Link
+                                to="/login"
+                                style={{
+                                    color: '#059669',
+                                    fontWeight: 600,
+                                    textDecoration: 'none',
+                                }}
+                            >
+                                Sign in
+                            </Link>
+                        </p>
+                    </div>
+                </form>
             </div>
         </div>
     );

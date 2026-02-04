@@ -1,13 +1,16 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
+import { useWholesalerCart } from '../../context/WholesalerCartContext';
 import { FaUser, FaSignOutAlt, FaTractor, FaShoppingCart, FaBox } from 'react-icons/fa';
 
 const Navbar = () => {
     const { user, logout } = useAuth();
     const { getCartCount } = useCart();
+    const { getCartTotals } = useWholesalerCart();
     const navigate = useNavigate();
     const cartCount = getCartCount();
+    const wholesalerCartCount = getCartTotals().itemCount;
 
     const handleLogout = () => {
         logout();
@@ -33,6 +36,28 @@ const Navbar = () => {
                         <Link to="/wholesaler" className="nav-link">Dashboard</Link>
                         <Link to="/wholesaler/marketplace" className="nav-link">Marketplace</Link>
                         <Link to="/wholesaler/negotiations" className="nav-link">Negotiations</Link>
+                        <Link to="/wholesaler/cart" className="nav-link" style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)', position: 'relative' }}>
+                            <FaShoppingCart /> Cart
+                            {wholesalerCartCount > 0 && (
+                                <span style={{
+                                    position: 'absolute',
+                                    top: '-8px',
+                                    right: '-8px',
+                                    background: 'var(--accent-orange)',
+                                    color: 'white',
+                                    borderRadius: '50%',
+                                    width: '20px',
+                                    height: '20px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 700
+                                }}>
+                                    {wholesalerCartCount}
+                                </span>
+                            )}
+                        </Link>
                     </>
                 );
             case 'consumer':

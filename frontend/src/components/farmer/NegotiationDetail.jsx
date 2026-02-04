@@ -134,10 +134,14 @@ const NegotiationDetail = () => {
                     <div className="card">
                         <div className="flex items-start gap-4 mb-4">
                             <img
-                                src={getCropImage(crop?.name)}
-                                alt={crop?.name}
+                                src={crop?.images?.[0] || getCropImage(crop?.name) || '/placeholder.jpg'}
+                                alt={crop?.name || 'Crop'}
                                 className="img-rounded"
                                 style={{ width: '80px', height: '80px', objectFit: 'cover' }}
+                                onError={(e) => {
+                                    e.target.onerror = null;
+                                    e.target.src = 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=800&q=80';
+                                }}
                             />
                             <div>
                                 <h3 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--spacing-1)' }}>{crop?.name}</h3>

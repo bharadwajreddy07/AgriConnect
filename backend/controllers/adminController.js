@@ -286,13 +286,37 @@ export const getRecentNegotiations = async (req, res) => {
             .limit(10)
             .populate('crop', 'name images')
             .populate('farmer', 'name email phone region')
-            .populate('wholesaler', 'name email phone company')
-            .populate('currentOffer');
+            .populate('wholesaler', 'name email phone company');
 
         res.json({
             success: true,
             count: negotiations.length,
             data: negotiations,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+// @desc    Update user status (activate/deactivate)
+// @route   PUT /api/admin/users/:id/status
+// @access  Private (Admin only)
+export const updateUserStatus = async (req, res) => {
+    try {
+        const { isActive } = req.body;
+        const user = await User.findById(req.params.id);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        user.isActive = isActive;
+        await user.save();
+
+        res.json({
+            success: true,
+            data: user,
         });
     } catch (error) {
         console.error(error);

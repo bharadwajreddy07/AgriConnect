@@ -7,6 +7,7 @@ import {
     getSeasonalReport,
     getPriceTrends,
     getRecentNegotiations,
+    updateUserStatus,
 } from '../controllers/adminController.js';
 import { protect, authorize } from '../middleware/authMiddleware.js';
 
@@ -19,6 +20,7 @@ router.use(authorize('admin'));
 // User management
 router.get('/users', getAllUsers);
 router.put('/users/:id/verify', verifyUser);
+router.put('/users/:id/status', updateUserStatus);
 
 // Crop management
 router.get('/crops/pending', getPendingCrops);

@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
+import { WholesalerCartProvider } from './context/WholesalerCartContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -8,6 +9,10 @@ import 'react-toastify/dist/ReactToastify.css';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import AdminLogin from './components/auth/AdminLogin';
+import OTPLogin from './components/auth/OTPLogin';
+import GoogleCallback from './components/auth/GoogleCallback';
+import ForgotPassword from './components/auth/ForgotPassword';
+import ResetPassword from './components/auth/ResetPassword';
 
 // Farmer Components
 import FarmerDashboard from './components/farmer/FarmerDashboard';
@@ -26,8 +31,14 @@ import WholesalerDashboard from './components/wholesaler/WholesalerDashboard';
 import WholesalerMarketplace from './components/wholesaler/WholesalerMarketplace';
 import WholesalerSamples from './components/wholesaler/WholesalerSamples';
 import WholesalerOrders from './components/wholesaler/WholesalerOrders';
+import WholesalerMyOrders from './components/wholesaler/WholesalerMyOrders';
+import WholesalerOrderTracking from './components/wholesaler/WholesalerOrderTracking';
 import WholesalerNegotiation from './components/wholesaler/WholesalerNegotiation';
 import WholesalerNegotiationDetail from './components/wholesaler/WholesalerNegotiationDetail';
+import WholesalerCart from './components/wholesaler/WholesalerCart';
+import WholesalerCheckout from './components/wholesaler/WholesalerCheckout';
+import WholesalerOrderSuccess from './components/wholesaler/WholesalerOrderSuccess';
+import WholesalerInvestments from './components/wholesaler/WholesalerInvestments';
 
 // Consumer Components
 import ConsumerDashboard from './components/consumer/ConsumerDashboard';
@@ -89,12 +100,28 @@ const AppRoutes = () => {
                     element={user ? <Navigate to={`/${user.role}`} replace /> : <Login />}
                 />
                 <Route
+                    path="/login/otp"
+                    element={user ? <Navigate to={`/${user.role}`} replace /> : <OTPLogin />}
+                />
+                <Route
+                    path="/auth/google/callback"
+                    element={<GoogleCallback />}
+                />
+                <Route
                     path="/register"
                     element={user ? <Navigate to={`/${user.role}`} replace /> : <Register />}
                 />
                 <Route
                     path="/admin/login"
                     element={user ? <Navigate to={`/${user.role}`} replace /> : <AdminLogin />}
+                />
+                <Route
+                    path="/forgot-password"
+                    element={user ? <Navigate to={`/${user.role}`} replace /> : <ForgotPassword />}
+                />
+                <Route
+                    path="/reset-password/:token"
+                    element={user ? <Navigate to={`/${user.role}`} replace /> : <ResetPassword />}
                 />
 
                 {/* Farmer Routes */}
@@ -232,7 +259,47 @@ const AppRoutes = () => {
                     path="/wholesaler/orders"
                     element={
                         <ProtectedRoute allowedRoles={['wholesaler']}>
-                            <WholesalerOrders />
+                            <WholesalerMyOrders />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/wholesaler/orders/:orderId"
+                    element={
+                        <ProtectedRoute allowedRoles={['wholesaler']}>
+                            <WholesalerOrderTracking />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/wholesaler/cart"
+                    element={
+                        <ProtectedRoute allowedRoles={['wholesaler']}>
+                            <WholesalerCart />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/wholesaler/checkout"
+                    element={
+                        <ProtectedRoute allowedRoles={['wholesaler']}>
+                            <WholesalerCheckout />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/wholesaler/order-success"
+                    element={
+                        <ProtectedRoute allowedRoles={['wholesaler']}>
+                            <WholesalerOrderSuccess />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/wholesaler/investments"
+                    element={
+                        <ProtectedRoute allowedRoles={['wholesaler']}>
+                            <WholesalerInvestments />
                         </ProtectedRoute>
                     }
                 />
@@ -364,20 +431,22 @@ function App() {
     return (
         <Router>
             <AuthProvider>
-                <CartProvider>
-                    <AppRoutes />
-                    <ToastContainer
-                        position="top-right"
-                        autoClose={3000}
-                        hideProgressBar={false}
-                        newestOnTop
-                        closeOnClick
-                        rtl={false}
-                        pauseOnFocusLoss
-                        draggable
-                        pauseOnHover
-                    />
-                </CartProvider>
+                <WholesalerCartProvider>
+                    <CartProvider>
+                        <AppRoutes />
+                        <ToastContainer
+                            position="top-right"
+                            autoClose={3000}
+                            hideProgressBar={false}
+                            newestOnTop
+                            closeOnClick
+                            rtl={false}
+                            pauseOnFocusLoss
+                            draggable
+                            pauseOnHover
+                        />
+                    </CartProvider>
+                </WholesalerCartProvider>
             </AuthProvider>
         </Router>
     );

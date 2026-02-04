@@ -18,7 +18,7 @@ import {
     FaEye
 } from 'react-icons/fa';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 const AdminDashboard = () => {
     const [analytics, setAnalytics] = useState(null);
@@ -121,7 +121,7 @@ const AdminDashboard = () => {
         ]);
 
         // Add table
-        doc.autoTable({
+        autoTable(doc, {
             startY: 35,
             head: [['#', 'Name', 'Email', 'Phone', 'Role', 'Region', 'Joined Date']],
             body: tableData,
@@ -308,66 +308,133 @@ const AdminDashboard = () => {
 
                 <div className="grid gap-8">
                     {/* Negotiations Table */}
-                    <div style={{
-                        background: 'rgba(255, 255, 255, 0.8)',
-                        backdropFilter: 'blur(10px)',
-                        borderRadius: 'var(--radius-2xl)',
-                        padding: 'var(--spacing-6)',
-                        border: '1px solid rgba(255, 255, 255, 0.3)',
-                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
-                    }}>
+                    <div className="card-premium" style={{ background: 'linear-gradient(to bottom right, #f8f9ff, #ffffff)' }}>
                         <div className="flex items-center justify-between mb-6">
                             <h3 style={{
                                 background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
                                 WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent'
+                                WebkitTextFillColor: 'transparent',
+                                fontSize: '1.5rem',
+                                fontWeight: 700
                             }}>
                                 Recent Negotiations
                             </h3>
-                            <Link to="/admin" className="btn btn-outline btn-sm">View All</Link>
+                            <button
+                                onClick={() => navigate('/admin/negotiations')}
+                                className="btn btn-outline btn-sm"
+                                style={{
+                                    borderColor: '#8b5cf6',
+                                    color: '#8b5cf6',
+                                    fontWeight: 600
+                                }}
+                            >
+                                View All
+                            </button>
                         </div>
 
-                        <div className="table-responsive">
-                            <table className="table">
-                                <thead>
+                        <div className="table-responsive" style={{ borderRadius: '12px', overflow: 'hidden' }}>
+                            <table className="table" style={{ marginBottom: 0 }}>
+                                <thead style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' }}>
                                     <tr>
-                                        <th>Crop</th>
-                                        <th>Farmer</th>
-                                        <th>Wholesaler</th>
-                                        <th>Status</th>
-                                        <th>Last Offer</th>
-                                        <th>Date</th>
+                                        <th style={{ color: 'white', fontWeight: 600, padding: '16px' }}>Crop</th>
+                                        <th style={{ color: 'white', fontWeight: 600, padding: '16px' }}>Farmer</th>
+                                        <th style={{ color: 'white', fontWeight: 600, padding: '16px' }}>Wholesaler</th>
+                                        <th style={{ color: 'white', fontWeight: 600, padding: '16px' }}>Status</th>
+                                        <th style={{ color: 'white', fontWeight: 600, padding: '16px' }}>Last Offer</th>
+                                        <th style={{ color: 'white', fontWeight: 600, padding: '16px' }}>Date</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {recentNegotiations.map((neg) => (
-                                        <tr key={neg._id}>
-                                            <td>
-                                                <div className="flex items-center gap-2">
-                                                    {neg.crop?.images?.[0] && (
-                                                        <img src={neg.crop.images[0]} alt="" style={{ width: 30, height: 30, borderRadius: '50%', objectFit: 'cover' }} />
+                                    {recentNegotiations.map((neg, index) => (
+                                        <tr
+                                            key={neg._id}
+                                            style={{
+                                                background: index % 2 === 0 ? '#ffffff' : '#f9fafb',
+                                                transition: 'all 0.2s',
+                                                cursor: 'pointer'
+                                            }}
+                                            onMouseEnter={(e) => e.currentTarget.style.background = '#f3f4f6'}
+                                            onMouseLeave={(e) => e.currentTarget.style.background = index % 2 === 0 ? '#ffffff' : '#f9fafb'}
+                                            onClick={() => navigate(`/admin/negotiations/${neg._id}`)}
+                                        >
+                                            <td style={{ padding: '16px' }}>
+                                                <div className="flex items-center gap-3">
+                                                    {neg.crop?.images?.[0] ? (
+                                                        <img
+                                                            src={neg.crop.images[0]}
+                                                            alt=""
+                                                            style={{
+                                                                width: 40,
+                                                                height: 40,
+                                                                borderRadius: '8px',
+                                                                objectFit: 'cover',
+                                                                border: '2px solid #e5e7eb'
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <div style={{
+                                                            width: 40,
+                                                            height: 40,
+                                                            borderRadius: '8px',
+                                                            background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            fontSize: '20px'
+                                                        }}>
+                                                            🌾
+                                                        </div>
                                                     )}
-                                                    {neg.crop?.name || 'Unknown Crop'}
+                                                    <span style={{ fontWeight: 600, color: '#111827' }}>
+                                                        {neg.crop?.name || 'Unknown Crop'}
+                                                    </span>
                                                 </div>
                                             </td>
-                                            <td>{neg.farmer?.name}</td>
-                                            <td>{neg.wholesaler?.name}</td>
-                                            <td>
-                                                <span className={`badge ${neg.status === 'accepted' ? 'badge-success' :
-                                                    neg.status === 'rejected' ? 'badge-danger' :
-                                                        'badge-warning'
-                                                    }`}>
+                                            <td style={{ padding: '16px', color: '#374151', fontWeight: 500 }}>
+                                                {neg.farmer?.name || 'N/A'}
+                                            </td>
+                                            <td style={{ padding: '16px', color: '#374151', fontWeight: 500 }}>
+                                                {neg.wholesaler?.name || 'N/A'}
+                                            </td>
+                                            <td style={{ padding: '16px' }}>
+                                                <span
+                                                    className="badge"
+                                                    style={{
+                                                        background: neg.status === 'accepted' ? '#d1fae5' :
+                                                            neg.status === 'rejected' ? '#fee2e2' :
+                                                                neg.status === 'ongoing' ? '#fef3c7' : '#f3f4f6',
+                                                        color: neg.status === 'accepted' ? '#065f46' :
+                                                            neg.status === 'rejected' ? '#991b1b' :
+                                                                neg.status === 'ongoing' ? '#92400e' : '#374151',
+                                                        fontWeight: 600,
+                                                        padding: '6px 12px',
+                                                        borderRadius: '6px',
+                                                        textTransform: 'uppercase',
+                                                        fontSize: '11px',
+                                                        letterSpacing: '0.5px'
+                                                    }}
+                                                >
                                                     {neg.status}
                                                 </span>
                                             </td>
-                                            <td>{formatPrice(neg.currentOffer?.amount || 0)}</td>
-                                            <td>{new Date(neg.updatedAt).toLocaleDateString()}</td>
+                                            <td style={{ padding: '16px', fontWeight: 600, color: '#059669' }}>
+                                                {formatPrice(neg.currentOffer?.amount || 0)}
+                                            </td>
+                                            <td style={{ padding: '16px', color: '#6b7280', fontSize: '14px' }}>
+                                                {new Date(neg.updatedAt).toLocaleDateString('en-IN', {
+                                                    day: '2-digit',
+                                                    month: '2-digit',
+                                                    year: 'numeric'
+                                                })}
+                                            </td>
                                         </tr>
                                     ))}
                                     {recentNegotiations.length === 0 && (
                                         <tr>
-                                            <td colSpan="6" className="text-center py-4 text-gray-500">
-                                                No recent negotiations
+                                            <td colSpan="6" className="text-center" style={{ padding: '48px', color: '#9ca3af' }}>
+                                                <div style={{ fontSize: '48px', marginBottom: '16px' }}>💬</div>
+                                                <p style={{ fontSize: '16px', fontWeight: 500 }}>No recent negotiations</p>
+                                                <p style={{ fontSize: '14px', marginTop: '8px' }}>Negotiations will appear here once they start</p>
                                             </td>
                                         </tr>
                                     )}

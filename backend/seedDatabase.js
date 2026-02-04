@@ -168,7 +168,7 @@ async function seedDatabase() {
                 images: template.image ? [template.image] : [], // Use template image if exists
                 farmer: farmer._id,
                 status: 'approved',
-                isOrganic: Math.random() > 0.7,
+                organicCertified: Math.random() > 0.7,
                 harvestDate: new Date(Date.now() - getRandomInRange(1, 30) * 24 * 60 * 60 * 1000),
                 availableFrom: new Date(),
                 availableUntil: new Date(Date.now() + getRandomInRange(30, 90) * 24 * 60 * 60 * 1000),

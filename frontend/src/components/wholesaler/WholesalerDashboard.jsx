@@ -22,19 +22,19 @@ const WholesalerDashboard = () => {
 
     const loadDashboardData = async () => {
         try {
-            const [samplesRes, negotiationsRes, ordersRes] = await Promise.all([
+            const [samplesRes, negotiationsRes, wholesaleOrdersRes] = await Promise.all([
                 api.get('/samples/wholesaler'),
                 api.get('/negotiations'),
-                api.get('/orders/wholesaler').catch(() => ({ data: { data: [] } })),
+                api.get('/wholesale-orders?role=wholesaler').catch(() => ({ data: { data: [] } })),
             ]);
 
-            const orders = ordersRes.data.data || [];
-            const totalSpending = orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+            const wholesaleOrders = wholesaleOrdersRes.data.data || [];
+            const totalSpending = wholesaleOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
 
             setStats({
                 samplesRequested: samplesRes.data.count || 0,
                 activeNegotiations: negotiationsRes.data.data?.filter((n) => n.status === 'ongoing').length || 0,
-                ordersPlaced: orders.length,
+                ordersPlaced: wholesaleOrders.length,
                 totalSpending: totalSpending,
             });
 
@@ -121,17 +121,41 @@ const WholesalerDashboard = () => {
                     </div>
                 </div>
 
-                <div className="card-premium">
+                <Link
+                    to="/wholesaler/investments"
+                    className="card-premium"
+                    style={{
+                        textDecoration: 'none',
+                        color: 'inherit',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                    }}
+                    onMouseOver={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.1)';
+                    }}
+                    onMouseOut={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '';
+                    }}
+                >
                     <div className="flex items-center justify-between">
                         <div>
-                            <p style={{ color: 'var(--gray-600)', fontSize: 'var(--font-size-sm)', marginBottom: 'var(--spacing-2)' }}>Total Spending</p>
-                            <h2 style={{ marginBottom: 0 }}>₹{(stats.totalSpending / 1000).toFixed(1)}K</h2>
+                            <p style={{ color: 'var(--gray-600)', fontSize: 'var(--font-size-sm)', marginBottom: 'var(--spacing-2)' }}>
+                                Total Amount Spent
+                            </p>
+                            <h2 style={{ marginBottom: 0, color: 'var(--primary-green)' }}>
+                                ₹{stats.totalSpending.toLocaleString('en-IN')}
+                            </h2>
+                            <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--gray-500)', marginTop: 'var(--spacing-2)' }}>
+                                Click to view details →
+                            </p>
                         </div>
                         <div style={{ fontSize: '2.5rem', color: 'var(--emerald-500)', opacity: 0.2 }}>
                             <FaChartLine />
                         </div>
                     </div>
-                </div>
+                </Link>
             </div>
 
             <div className="grid grid-cols-3 gap-6">
@@ -143,6 +167,12 @@ const WholesalerDashboard = () => {
                             <div style={{ fontSize: '3rem', marginBottom: 'var(--spacing-3)' }}>🌾</div>
                             <h4 style={{ marginBottom: 'var(--spacing-2)' }}>Crop Marketplace</h4>
                             <p style={{ color: 'var(--gray-600)', fontSize: 'var(--font-size-sm)' }}>Browse and source quality crops</p>
+                        </Link>
+
+                        <Link to="/wholesaler/cart" className="card hover-lift text-center" style={{ padding: 'var(--spacing-6)' }}>
+                            <div style={{ fontSize: '3rem', marginBottom: 'var(--spacing-3)' }}>🛒</div>
+                            <h4 style={{ marginBottom: 'var(--spacing-2)' }}>My Cart</h4>
+                            <p style={{ color: 'var(--gray-600)', fontSize: 'var(--font-size-sm)' }}>View and manage cart items</p>
                         </Link>
 
                         <Link to="/wholesaler/samples" className="card hover-lift text-center" style={{ padding: 'var(--spacing-6)' }}>
@@ -158,7 +188,7 @@ const WholesalerDashboard = () => {
                         </Link>
 
                         <Link to="/wholesaler/orders" className="card hover-lift text-center" style={{ padding: 'var(--spacing-6)' }}>
-                            <div style={{ fontSize: '3rem', marginBottom: 'var(--spacing-3)' }}>🛒</div>
+                            <div style={{ fontSize: '3rem', marginBottom: 'var(--spacing-3)' }}>📋</div>
                             <h4 style={{ marginBottom: 'var(--spacing-2)' }}>My Purchases</h4>
                             <p style={{ color: 'var(--gray-600)', fontSize: 'var(--font-size-sm)' }}>View order history</p>
                         </Link>

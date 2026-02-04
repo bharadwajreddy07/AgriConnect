@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import {
     FaSearch,
@@ -9,17 +9,23 @@ import {
     FaLeaf,
     FaFlask,
     FaHandshake,
+    FaShoppingCart,
 } from 'react-icons/fa';
 import api from '../../services/api';
 import { formatPrice } from '../../utils/cartUtils';
-import { indianStates, seasons, cropCategories, qualityGrades } from '../../utils/cropData';
+import { indianStates, seasons, cropCategories, qualityGrades, getCropImage } from '../../utils/cropData';
+import { useWholesalerCart } from '../../context/WholesalerCartContext';
 
 const WholesalerMarketplace = () => {
+    const navigate = useNavigate();
+    const { addDirectPurchaseToCart } = useWholesalerCart();
     const [crops, setCrops] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showFilters, setShowFilters] = useState(false);
     const [selectedCrop, setSelectedCrop] = useState(null);
     const [showSampleModal, setShowSampleModal] = useState(false);
+    const [showBuyModal, setShowBuyModal] = useState(false);
+    const [buyQuantity, setBuyQuantity] = useState({ value: '', unit: 'quintal' });
     const [filters, setFilters] = useState({
         category: '',
         season: '',
@@ -130,6 +136,25 @@ const WholesalerMarketplace = () => {
             console.error('Error requesting sample:', error);
             toast.error(error.response?.data?.message || 'Failed to request sample');
         }
+    };
+
+    const handleBuyNow = () => {
+        if (!buyQuantity.value || parseFloat(buyQuantity.value) <= 0) {
+            toast.error('Please enter a valid quantity');
+            return;
+        }
+
+        addDirectPurchaseToCart(selectedCrop, buyQuantity);
+        toast.success('Added to cart!');
+        setShowBuyModal(false);
+        setBuyQuantity({ value: '', unit: 'quintal' });
+
+        // Ask if they want to continue shopping or checkout
+        setTimeout(() => {
+            if (window.confirm('Item added to cart! Go to checkout now?')) {
+                navigate('/wholesaler/cart');
+            }
+        }, 500);
     };
 
     if (loading) {
@@ -287,7 +312,7 @@ const WholesalerMarketplace = () => {
                                 {/* Image */}
                                 <div style={{ position: 'relative', height: '200px', overflow: 'hidden' }}>
                                     <img
-                                        src={crop.images?.[0] || '/placeholder.jpg'}
+                                        src={getCropImage(crop.name)}
                                         alt={crop.name}
                                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                     />
@@ -339,22 +364,34 @@ const WholesalerMarketplace = () => {
                                     </div>
 
                                     {/* Actions */}
-                                    <div className="grid grid-cols-2 gap-2">
+                                    <div className="grid gap-2">
                                         <button
                                             onClick={() => {
                                                 setSelectedCrop(crop);
-                                                setShowSampleModal(true);
+                                                setBuyQuantity({ value: crop.quantity.value, unit: crop.quantity.unit });
+                                                setShowBuyModal(true);
                                             }}
-                                            className="btn btn-outline btn-sm"
+                                            className="btn btn-success btn-sm"
                                         >
-                                            <FaFlask /> Sample
+                                            <FaShoppingCart /> Buy Now
                                         </button>
-                                        <Link
-                                            to={`/wholesaler/negotiate/${crop._id}`}
-                                            className="btn btn-primary btn-sm"
-                                        >
-                                            <FaHandshake /> Negotiate
-                                        </Link>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <button
+                                                onClick={() => {
+                                                    setSelectedCrop(crop);
+                                                    setShowSampleModal(true);
+                                                }}
+                                                className="btn btn-outline btn-sm"
+                                            >
+                                                <FaFlask /> Sample
+                                            </button>
+                                            <Link
+                                                to={`/wholesaler/negotiate/${crop._id}`}
+                                                className="btn btn-primary btn-sm"
+                                            >
+                                                <FaHandshake /> Negotiate
+                                            </Link>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -489,6 +526,96 @@ const WholesalerMarketplace = () => {
                                     </button>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+                )}
+
+                {/* Buy Now Modal */}
+                {showBuyModal && selectedCrop && (
+                    <div
+                        style={{
+                            position: 'fixed',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            background: 'rgba(0, 0, 0, 0.5)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            zIndex: 1000,
+                        }}
+                        onClick={() => setShowBuyModal(false)}
+                    >
+                        <div
+                            className="card-premium"
+                            style={{ maxWidth: '500px', width: '90%' }}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <h2 style={{ marginBottom: 'var(--spacing-4)' }}>Quick Purchase</h2>
+                            <p style={{ color: 'var(--gray-600)', marginBottom: 'var(--spacing-4)' }}>
+                                {selectedCrop.name} from {selectedCrop.farmer?.name}
+                            </p>
+
+                            <div style={{ padding: 'var(--spacing-3)', background: 'var(--gray-50)', borderRadius: 'var(--radius-md)', marginBottom: 'var(--spacing-4)' }}>
+                                <div className="flex justify-between mb-2">
+                                    <span style={{ color: 'var(--gray-600)' }}>Price per {selectedCrop.quantity.unit}</span>
+                                    <span style={{ fontWeight: 700, color: 'var(--primary-green)' }}>{formatPrice(selectedCrop.expectedPrice)}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span style={{ color: 'var(--gray-600)' }}>Available</span>
+                                    <span style={{ fontWeight: 600 }}>{selectedCrop.quantity.value} {selectedCrop.quantity.unit}</span>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4 mb-4">
+                                <div className="form-group">
+                                    <label className="form-label">Quantity *</label>
+                                    <input
+                                        type="number"
+                                        className="form-input"
+                                        value={buyQuantity.value}
+                                        onChange={(e) => setBuyQuantity({ ...buyQuantity, value: e.target.value })}
+                                        min="1"
+                                        max={selectedCrop.quantity.value}
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Unit *</label>
+                                    <select
+                                        className="form-select"
+                                        value={buyQuantity.unit}
+                                        onChange={(e) => setBuyQuantity({ ...buyQuantity, unit: e.target.value })}
+                                    >
+                                        <option value="kg">kg</option>
+                                        <option value="quintal">quintal</option>
+                                        <option value="ton">ton</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            {buyQuantity.value && (
+                                <div style={{ padding: 'var(--spacing-3)', background: 'var(--blue-50)', borderRadius: 'var(--radius-md)', marginBottom: 'var(--spacing-4)' }}>
+                                    <div className="flex justify-between">
+                                        <span style={{ fontWeight: 600 }}>Estimated Total</span>
+                                        <span style={{ fontWeight: 700, fontSize: 'var(--font-size-lg)', color: 'var(--primary-green)' }}>
+                                            {formatPrice(selectedCrop.expectedPrice * parseFloat(buyQuantity.value || 0))}
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="flex gap-3">
+                                <button onClick={handleBuyNow} className="btn btn-success flex-1">
+                                    <FaShoppingCart /> Add to Cart
+                                </button>
+                                <button
+                                    onClick={() => setShowBuyModal(false)}
+                                    className="btn btn-outline flex-1"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}

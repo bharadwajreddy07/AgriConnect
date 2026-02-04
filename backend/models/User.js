@@ -5,33 +5,52 @@ const userSchema = new mongoose.Schema(
     {
         name: {
             type: String,
-            required: [true, 'Please provide a name'],
+            required: function () {
+                return this.authMethod === 'email';
+            },
             trim: true,
         },
         email: {
             type: String,
-            required: [true, 'Please provide an email'],
             unique: true,
+            sparse: true,
             lowercase: true,
             trim: true,
             match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email'],
         },
         password: {
             type: String,
-            required: [true, 'Please provide a password'],
+            required: function () {
+                return this.authMethod === 'email';
+            },
             minlength: 6,
             select: false,
         },
         phone: {
             type: String,
-            required: [true, 'Please provide a phone number'],
-            match: [/^[0-9]{10}$/, 'Please provide a valid 10-digit phone number'],
+            required: true,
+            unique: true,
+            sparse: true,
         },
         role: {
             type: String,
             enum: ['farmer', 'wholesaler', 'consumer', 'admin'],
             default: 'consumer',
             required: true,
+        },
+        authMethod: {
+            type: String,
+            enum: ['email', 'google', 'otp'],
+            default: 'email',
+        },
+        googleId: {
+            type: String,
+            unique: true,
+            sparse: true,
+        },
+        otpVerified: {
+            type: Boolean,
+            default: false,
         },
         address: {
             street: String,
@@ -49,6 +68,10 @@ const userSchema = new mongoose.Schema(
         isVerified: {
             type: Boolean,
             default: false,
+        },
+        isActive: {
+            type: Boolean,
+            default: true,
         },
         verificationDocuments: [
             {
@@ -74,6 +97,12 @@ const userSchema = new mongoose.Schema(
                 default: 0,
             },
         },
+        resetPasswordToken: {
+            type: String,
+        },
+        resetPasswordExpires: {
+            type: Date,
+        },
     },
     {
         timestamps: true,
@@ -82,7 +111,7 @@ const userSchema = new mongoose.Schema(
 
 // Hash password before saving
 userSchema.pre('save', async function (next) {
-    if (!this.isModified('password')) {
+    if (!this.isModified('password') || !this.password) {
         next();
     }
     const salt = await bcrypt.genSalt(10);

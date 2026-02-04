@@ -195,7 +195,10 @@ export const makeOffer = async (req, res) => {
 // @access  Private (Farmer or Wholesaler)
 export const acceptOffer = async (req, res) => {
     try {
-        const negotiation = await Negotiation.findById(req.params.id);
+        const negotiation = await Negotiation.findById(req.params.id)
+            .populate('crop', 'name category season expectedPrice images')
+            .populate('farmer', 'name phone email')
+            .populate('wholesaler', 'name phone email');
 
         if (!negotiation) {
             return res.status(404).json({ message: 'Negotiation not found' });
@@ -206,8 +209,8 @@ export const acceptOffer = async (req, res) => {
         }
 
         // Determine who is accepting
-        const isFarmer = negotiation.farmer.toString() === req.user._id.toString();
-        const isWholesaler = negotiation.wholesaler.toString() === req.user._id.toString();
+        const isFarmer = negotiation.farmer._id.toString() === req.user._id.toString();
+        const isWholesaler = negotiation.wholesaler._id.toString() === req.user._id.toString();
 
         if (!isFarmer && !isWholesaler) {
             return res.status(403).json({ message: 'Not authorized' });
@@ -215,15 +218,20 @@ export const acceptOffer = async (req, res) => {
 
         const acceptedBy = isFarmer ? 'farmer' : 'wholesaler';
 
-        // Update negotiation
-        negotiation.status = 'accepted';
-        negotiation.finalAgreedPrice = negotiation.currentOffer.amount;
-        negotiation.totalAmount =
-            negotiation.finalAgreedPrice * negotiation.agreedQuantity.value;
-        negotiation.acceptedBy = acceptedBy;
-        negotiation.acceptedAt = new Date();
+        // Update acceptance status
+        if (isFarmer) {
+            negotiation.farmerAccepted = true;
+        } else {
+            negotiation.wholesalerAccepted = true;
+        }
 
-        await negotiation.save();
+        // Calculate total if not already set
+        if (!negotiation.totalAmount && negotiation.currentOffer && negotiation.agreedQuantity) {
+            negotiation.totalAmount = negotiation.currentOffer.amount * negotiation.agreedQuantity.value;
+        }
+
+        // Set final price
+        negotiation.finalAgreedPrice = negotiation.currentOffer.amount;
 
         // Add system message to chat
         const chat = await Chat.findOne({ negotiation: negotiation._id });
@@ -231,21 +239,77 @@ export const acceptOffer = async (req, res) => {
             chat.messages.push({
                 sender: req.user._id,
                 senderRole: acceptedBy,
-                content: `Accepted the offer of ₹${negotiation.finalAgreedPrice}`,
+                content: `${acceptedBy === 'farmer' ? 'Farmer' : 'Wholesaler'} accepted the offer of ₹${negotiation.finalAgreedPrice}`,
                 messageType: 'system',
             });
             await chat.save();
         }
 
-        const populatedNegotiation = await Negotiation.findById(negotiation._id)
-            .populate('crop', 'name category season')
-            .populate('farmer', 'name phone email')
-            .populate('wholesaler', 'name phone email');
+        // Check if BOTH parties have accepted
+        if (negotiation.farmerAccepted && negotiation.wholesalerAccepted) {
+            // Both accepted - create order automatically
+            const WholesaleOrder = (await import('../models/WholesaleOrder.js')).default;
 
-        res.json({
-            success: true,
-            data: populatedNegotiation,
-        });
+            const order = await WholesaleOrder.create({
+                crop: negotiation.crop._id,
+                farmer: negotiation.farmer._id,
+                wholesaler: negotiation.wholesaler._id,
+                negotiation: negotiation._id,
+                quantity: negotiation.agreedQuantity,
+                pricePerUnit: negotiation.finalAgreedPrice,
+                totalAmount: negotiation.totalAmount,
+                deliveryAddress: {
+                    // You may want to get this from request or wholesaler profile
+                    street: req.body.deliveryAddress?.street || '',
+                    city: req.body.deliveryAddress?.city || '',
+                    state: req.body.deliveryAddress?.state || '',
+                    pincode: req.body.deliveryAddress?.pincode || '',
+                },
+                status: 'pending',
+            });
+
+            // Update negotiation to completed
+            negotiation.status = 'accepted';
+            negotiation.acceptedAt = new Date();
+            negotiation.createdOrder = order._id;
+
+            // Add order creation message to chat
+            if (chat) {
+                chat.messages.push({
+                    sender: req.user._id,
+                    senderRole: 'system',
+                    content: `🎉 Order created successfully! Order #${order.orderNumber}`,
+                    messageType: 'system',
+                });
+                await chat.save();
+            }
+
+            await negotiation.save();
+
+            return res.json({
+                success: true,
+                message: 'Both parties accepted! Order created successfully.',
+                data: negotiation,
+                orderCreated: true,
+                order: {
+                    _id: order._id,
+                    orderNumber: order.orderNumber,
+                },
+            });
+        } else {
+            // Only one party accepted - wait for the other
+            await negotiation.save();
+
+            const waitingFor = isFarmer ? 'wholesaler' : 'farmer';
+
+            return res.json({
+                success: true,
+                message: `You accepted the offer. Waiting for ${waitingFor} to accept...`,
+                data: negotiation,
+                orderCreated: false,
+                waitingFor,
+            });
+        }
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error', error: error.message });

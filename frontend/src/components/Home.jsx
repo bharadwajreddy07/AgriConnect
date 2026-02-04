@@ -201,11 +201,11 @@ const Home = () => {
                                     height: '80px',
                                     margin: '0 auto var(--spacing-4)',
                                     borderRadius: '50%',
-                                    background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
+                                    background: 'linear-gradient(135deg, #34d399 0%, #10b981 100%)',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    boxShadow: '0 10px 30px rgba(14, 165, 233, 0.3)',
+                                    boxShadow: '0 10px 30px rgba(16, 185, 129, 0.3)',
                                 }}
                             >
                                 <FaShoppingCart style={{ color: 'white', fontSize: '2.5rem' }} />
@@ -214,7 +214,7 @@ const Home = () => {
                             <p style={{ color: 'var(--gray-600)', marginBottom: 'var(--spacing-4)', fontSize: 'var(--font-size-sm)' }}>
                                 Buy fresh produce directly from farmers at fair prices
                             </p>
-                            <Link to="/register" className="btn" style={{ width: '100%', background: 'var(--sky-500)', color: 'white' }}>
+                            <Link to="/register" className="btn btn-primary" style={{ width: '100%' }}>
                                 Shop Now
                             </Link>
                         </div>
@@ -268,14 +268,14 @@ const Home = () => {
 
                     <div className="grid grid-cols-4 gap-6">
                         {[
-                            { name: 'Paddy', image: '/images/crops/paddy.png', season: 'Kharif', price: '2,500', location: 'Punjab' },
-                            { name: 'Maize', image: '/images/crops/maize.png', season: 'Kharif', price: '1,800', location: 'Karnataka' },
-                            { name: 'Pulses', image: '/images/crops/pulses.png', season: 'Rabi', price: '6,500', location: 'Maharashtra' },
-                            { name: 'Turmeric', image: '/images/crops/turmeric.png', season: 'Kharif', price: '5,200', location: 'Gujarat' },
-                            { name: 'Wheat', image: '/images/crops/wheat.png', season: 'Rabi', price: '2,100', location: 'Haryana' },
-                            { name: 'Sugarcane', image: '/images/crops/sugarcane.png', season: 'Year-Round', price: '3,200', location: 'Uttar Pradesh' },
-                            { name: 'Tomatoes', image: '/images/crops/tomatoes.png', season: 'Zaid', price: '4,500', location: 'Tamil Nadu' },
-                            { name: 'Bananas', image: '/images/crops/bananas.png', season: 'Year-Round', price: '3,800', location: 'Kerala' },
+                            { name: 'Basmati Rice', image: '/images/crops/paddy.png', season: 'Kharif', price: '4,500', location: 'Punjab' },
+                            { name: 'Alphonso Mangoes', image: '/images/crops/mangoes.png', season: 'Zaid', price: '12,000', location: 'Maharashtra' },
+                            { name: 'Tomatoes', image: '/images/crops/apple.png', season: 'Rabi', price: '8,500', location: 'Himachal' },
+                            { name: 'Organic Turmeric', image: '/images/crops/turmeric.png', season: 'Kharif', price: '9,200', location: 'Telangana' },
+                            { name: 'Golden Wheat', image: '/images/crops/wheat.png', season: 'Rabi', price: '2,800', location: 'Haryana' },
+                            { name: 'Tomatoes', image: '/images/crops/chilli.png', season: 'Year-Round', price: '5,500', location: 'Karnataka' },
+                            { name: 'Nagpur Oranges', image: '/images/crops/oranges.png', season: 'Rabi', price: '4,800', location: 'Maharashtra' },
+                            { name: 'Red Onions', image: '/images/crops/onions.png', season: 'Kharif', price: '3,200', location: 'Maharashtra' },
                         ].map((crop, index) => (
                             <div key={index} className="crop-card hover-3d">
                                 <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 'var(--radius-2xl) var(--radius-2xl) 0 0' }}>

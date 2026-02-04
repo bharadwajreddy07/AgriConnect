@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../../services/api';
 import { AuthContext } from '../../context/AuthContext';
+import { useWholesalerCart } from '../../context/WholesalerCartContext';
 import { getCropImage, formatPrice, formatDateTime, getSeasonBadgeClass, getStatusBadgeClass } from '../../utils/cropData';
 import ChatBox from '../shared/ChatBox';
 
@@ -10,11 +11,13 @@ const WholesalerNegotiationDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { user } = useContext(AuthContext);
+    const { addNegotiationToCart } = useWholesalerCart();
     const [negotiation, setNegotiation] = useState(null);
     const [loading, setLoading] = useState(true);
     const [offerAmount, setOfferAmount] = useState('');
     const [offerMessage, setOfferMessage] = useState('');
     const [submitting, setSubmitting] = useState(false);
+    const [showCartOptions, setShowCartOptions] = useState(false);
 
     useEffect(() => {
         loadNegotiation();
@@ -34,6 +37,9 @@ const WholesalerNegotiationDetail = () => {
             setLoading(false);
         }
     };
+
+    // Get the quantity from current offer or crop default - MOVED HERE BEFORE USAGE
+    const currentQuantity = negotiation?.currentOffer?.quantity || negotiation?.crop?.quantity || { value: 1, unit: 'quintal' };
 
     const handleMakeOffer = async (e) => {
         e.preventDefault();
@@ -78,6 +84,27 @@ const WholesalerNegotiationDetail = () => {
         } catch (error) {
             toast.error('Failed to cancel negotiation');
         }
+    };
+
+    const handleAddToCart = () => {
+        if (negotiation.status !== 'accepted') {
+            toast.error('Negotiation must be accepted before adding to cart');
+            return;
+        }
+
+        addNegotiationToCart(negotiation);
+        toast.success('Added to cart! You can continue shopping or checkout.');
+        setShowCartOptions(true);
+    };
+
+    const handleCheckoutNow = async () => {
+        if (negotiation.status !== 'accepted') {
+            toast.error('Negotiation must be accepted before checkout');
+            return;
+        }
+
+        addNegotiationToCart(negotiation);
+        navigate('/wholesaler/cart');
     };
 
     if (loading) {
@@ -131,8 +158,6 @@ const WholesalerNegotiationDetail = () => {
     const isOngoing = negotiation.status === 'ongoing';
     const canRespond = isOngoing && negotiation.currentOffer?.offeredBy === 'farmer';
 
-    // Get the quantity from current offer or crop default
-    const currentQuantity = negotiation.currentOffer?.quantity || crop?.quantity || { value: 0, unit: 'units' };
 
     return (
         <div className="container" style={{ marginTop: 'var(--spacing-8)', marginBottom: 'var(--spacing-8)' }}>
@@ -148,7 +173,7 @@ const WholesalerNegotiationDetail = () => {
                     </p>
                 </div>
                 <span className={`badge ${getStatusBadgeClass(negotiation.status)}`} style={{ fontSize: 'var(--font-size-base)', padding: 'var(--spacing-2) var(--spacing-4)' }}>
-                    {negotiation.status}
+                    {typeof negotiation.status === 'string' ? negotiation.status : String(negotiation.status || 'ongoing')}
                 </span>
             </div>
 
@@ -160,9 +185,13 @@ const WholesalerNegotiationDetail = () => {
                         <div className="flex items-start gap-4 mb-4">
                             <img
                                 src={crop?.images?.[0] || getCropImage(crop?.name) || '/placeholder.jpg'}
-                                alt={crop?.name}
+                                alt={crop?.name || 'Crop'}
                                 className="img-rounded"
                                 style={{ width: '80px', height: '80px', objectFit: 'cover' }}
+                                onError={(e) => {
+                                    e.target.onerror = null;
+                                    e.target.src = 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=800&q=80';
+                                }}
                             />
                             <div>
                                 <h3 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--spacing-1)' }}>{crop?.name}</h3>
@@ -202,7 +231,7 @@ const WholesalerNegotiationDetail = () => {
                             </div>
                             <div className="flex justify-between">
                                 <span>Location:</span>
-                                <strong>{farmer?.address || 'N/A'}</strong>
+                                <strong>{farmer?.address ? (typeof farmer.address === 'string' ? farmer.address : `${farmer.address.village || ''}, ${farmer.address.district || ''}, ${farmer.address.state || ''}`.trim()) : 'N/A'}</strong>
                             </div>
                         </div>
                     </div>
@@ -284,6 +313,39 @@ const WholesalerNegotiationDetail = () => {
                                     </button>
                                 </div>
                             </form>
+                        </div>
+                    )}
+
+                    {/* Cart Actions for Accepted Negotiations */}
+                    {negotiation.status === 'accepted' && !showCartOptions && (
+                        <div className="card bg-blue-50 border-blue-200">
+                            <h3 className="mb-3 text-sm font-semibold text-blue-800">🎉 Negotiation Accepted!</h3>
+                            <p className="text-sm text-gray-700 mb-4">
+                                Final Price: <strong className="text-green-600">{formatPrice(negotiation.finalAgreedPrice)}</strong> per {negotiation.agreedQuantity?.unit}
+                            </p>
+                            <div className="flex gap-3">
+                                <button onClick={handleAddToCart} className="btn btn-primary flex-1">
+                                    🛒 Add to Cart
+                                </button>
+                                <button onClick={handleCheckoutNow} className="btn btn-success flex-1">
+                                    ⚡ Checkout Now
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* After Adding to Cart */}
+                    {showCartOptions && (
+                        <div className="card bg-green-50 border-green-200">
+                            <h3 className="mb-3 text-sm font-semibold text-green-800">✅ Added to Cart!</h3>
+                            <div className="flex gap-3">
+                                <button onClick={() => navigate('/wholesaler/marketplace')} className="btn btn-outline flex-1">
+                                    Continue Shopping
+                                </button>
+                                <button onClick={() => navigate('/wholesaler/cart')} className="btn btn-primary flex-1">
+                                    View Cart
+                                </button>
+                            </div>
                         </div>
                     )}
                 </div>

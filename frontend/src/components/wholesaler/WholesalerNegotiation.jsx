@@ -20,11 +20,11 @@ const WholesalerNegotiation = () => {
     const [allNegotiations, setAllNegotiations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [offer, setOffer] = useState({
-        pricePerUnit: '',
+        amount: '',
         quantity: { value: '', unit: 'quintal' },
         deliveryTerms: '',
         paymentTerms: '',
-        notes: '',
+        message: '',
     });
 
     const [notFound, setNotFound] = useState(false);
@@ -90,7 +90,7 @@ const WholesalerNegotiation = () => {
             if (!activeNeg && cropData) {
                 setOffer({
                     ...offer,
-                    pricePerUnit: cropData.expectedPrice || '',
+                    amount: cropData.expectedPrice || '',
                     quantity: cropData.quantity || { value: '', unit: 'quintal' },
                 });
             }
@@ -110,26 +110,23 @@ const WholesalerNegotiation = () => {
 
             const response = await api.post('/negotiations', {
                 crop: cropId,
-                initialPrice: offer.pricePerUnit,
+                initialPrice: offer.amount,
                 quantity: offer.quantity,
-                message: `Negotiation request for ${crop.name}`
+                message: offer.message || `Negotiation request for ${crop.name}`
             });
             toast.success('Negotiation started successfully!');
             // clear offer
             setOffer({
-                pricePerUnit: '',
+                amount: '',
                 quantity: { value: '', unit: 'quintal' },
                 deliveryTerms: '',
                 paymentTerms: '',
-                notes: '',
+                message: '',
             });
-            // Redirect to the new negotiation detail page
-            if (response.data && response.data.data && response.data.data._id) {
-                navigate(`/wholesaler/negotiations/${response.data.data._id}`);
-            } else {
-                loadData();
-            }
+            // Redirect to negotiations list to see all negotiations
+            navigate('/wholesaler/negotiations');
         } catch (error) {
+
             console.error('Error creating negotiation:', error);
             toast.error(error.response?.data?.message || 'Failed to start negotiation');
         }
@@ -138,21 +135,19 @@ const WholesalerNegotiation = () => {
     const handleCounterOffer = async (e) => {
         e.preventDefault();
         try {
-            await api.post(`/negotiations/${negotiation._id}/offer`, offer);
-            toast.success('Counter offer sent!');
-            loadData();
-            setOffer({
-                pricePerUnit: '',
-                quantity: { value: '', unit: 'quintal' },
-                deliveryTerms: '',
-                paymentTerms: '',
-                notes: '',
+            await api.post(`/negotiations/${negotiation._id}/offer`, {
+                amount: offer.amount,
+                quantity: offer.quantity,
+                message: offer.message
             });
+            toast.success('Counter offer sent!');
+            navigate('/wholesaler/negotiations');
         } catch (error) {
-            console.error('Error sending offer:', error);
-            toast.error('Failed to send counter offer');
+            console.error('Error sending counter offer:', error);
+            toast.error(error.response?.data?.message || 'Failed to send counter offer');
         }
     };
+
 
     const handleAccept = async () => {
         try {
@@ -366,7 +361,7 @@ const WholesalerNegotiation = () => {
                                             <div>
                                                 <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--gray-600)' }}>Quantity</p>
                                                 <p style={{ fontWeight: 600 }}>
-                                                    {currentOffer.quantity.value} {currentOffer.quantity.unit}
+                                                    {currentOffer.quantity?.value || 'N/A'} {currentOffer.quantity?.unit || ''}
                                                 </p>
                                             </div>
                                         </div>
@@ -411,8 +406,8 @@ const WholesalerNegotiation = () => {
                                         <input
                                             type="number"
                                             className="form-input"
-                                            value={offer.pricePerUnit}
-                                            onChange={(e) => setOffer({ ...offer, pricePerUnit: e.target.value })}
+                                            value={offer.amount}
+                                            onChange={(e) => setOffer({ ...offer, amount: e.target.value })}
                                             required
                                             min="0"
                                         />
@@ -471,13 +466,13 @@ const WholesalerNegotiation = () => {
                                 </div>
 
                                 <div className="form-group">
-                                    <label className="form-label">Notes (Optional)</label>
+                                    <label className="form-label">Message (Optional)</label>
                                     <textarea
                                         className="form-textarea"
                                         rows="3"
                                         placeholder="Any additional terms or notes..."
-                                        value={offer.notes}
-                                        onChange={(e) => setOffer({ ...offer, notes: e.target.value })}
+                                        value={offer.message}
+                                        onChange={(e) => setOffer({ ...offer, message: e.target.value })}
                                     />
                                 </div>
 

@@ -32,6 +32,27 @@ const SampleRequests = () => {
         }
     };
 
+    const handleStartNegotiation = async (sample) => {
+        try {
+            // Create negotiation from sample
+            const response = await api.post('/negotiations', {
+                cropId: sample.crop._id,
+                wholesalerId: sample.wholesaler._id,
+                sampleId: sample._id,
+                initialQuantity: sample.requestedQuantity,
+            });
+
+            toast.success('Negotiation started! Redirecting...');
+            // Redirect to negotiation detail page
+            setTimeout(() => {
+                window.location.href = `/farmer/negotiations/${response.data.data._id}`;
+            }, 1000);
+        } catch (error) {
+            console.error('Start negotiation error:', error);
+            toast.error(error.response?.data?.message || 'Failed to start negotiation');
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center" style={{ minHeight: '80vh' }}>
@@ -96,6 +117,14 @@ const SampleRequests = () => {
                                             onClick={() => handleStatusUpdate(sample._id, 'sent')}
                                         >
                                             Mark as Sent
+                                        </button>
+                                    )}
+                                    {sample.status === 'evaluated' && sample.qualityRating >= 3 && (
+                                        <button
+                                            className="btn btn-primary btn-sm"
+                                            onClick={() => handleStartNegotiation(sample)}
+                                        >
+                                            Start Negotiation
                                         </button>
                                     )}
                                 </div>

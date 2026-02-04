@@ -71,6 +71,18 @@ const negotiationSchema = new mongoose.Schema(
             enum: ['farmer', 'wholesaler'],
         },
         acceptedAt: Date,
+        farmerAccepted: {
+            type: Boolean,
+            default: false,
+        },
+        wholesalerAccepted: {
+            type: Boolean,
+            default: false,
+        },
+        createdOrder: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'WholesaleOrder',
+        },
         expiresAt: {
             type: Date,
             default: function () {
