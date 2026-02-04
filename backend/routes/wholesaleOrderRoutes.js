@@ -17,6 +17,7 @@ router.post('/from-negotiation/:negotiationId', protect, createOrderFromNegotiat
 
 // Get orders
 router.get('/', protect, getOrders);
+router.get('/farmer', protect, getOrders); // Farmer-specific route (alias)
 router.get('/:id', protect, getOrder);
 
 // Update order

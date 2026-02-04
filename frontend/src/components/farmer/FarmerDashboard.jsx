@@ -36,14 +36,32 @@ const FarmerDashboard = () => {
         try {
             setLoading(true);
 
-            // Load crops and orders in parallel
-            const [cropsRes, ordersRes] = await Promise.all([
+            // Load crops, consumer orders, and wholesale orders in parallel
+            const [cropsRes, consumerOrdersRes, wholesaleOrdersRes] = await Promise.all([
                 api.get('/crops/my-crops'),
                 api.get('/marketplace/farmer/orders').catch(() => ({ data: { data: [] } })),
+                api.get('/wholesale-orders/farmer').catch(() => ({ data: { data: [] } })),
             ]);
 
             const crops = cropsRes.data.data || [];
-            const orders = ordersRes.data.data || [];
+            const consumerOrders = consumerOrdersRes.data.data || [];
+            const wholesaleOrders = wholesaleOrdersRes.data.data || [];
+
+            // Combine both order types
+            const allOrders = [...consumerOrders, ...wholesaleOrders];
+
+            // Calculate revenue from orders
+            const totalRevenue = allOrders.reduce((sum, order) => {
+                return sum + (order.farmerTotal || order.totalAmount || 0);
+            }, 0);
+
+            const pendingRevenue = allOrders
+                .filter(o => o.status === 'pending' || o.orderStatus === 'pending')
+                .reduce((sum, order) => sum + (order.farmerTotal || order.totalAmount || 0), 0);
+
+            const completedOrders = allOrders.filter(
+                o => o.status === 'delivered' || o.orderStatus === 'delivered'
+            );
 
             // Calculate stats
             const activeCrops = crops.filter(c => c.status === 'approved' || c.status === 'active');
@@ -55,10 +73,17 @@ const FarmerDashboard = () => {
                 activeCrops: activeCrops.length,
                 lowStockItems: lowStock.length,
                 outOfStock: outOfStock.length,
+                totalRevenue,
+                pendingRevenue,
+                completedOrders: completedOrders.length,
+                totalOrders: allOrders.length,
             });
 
-            // Set recent orders (last 5)
-            setRecentOrders(orders.slice(0, 5));
+            // Set recent orders (last 5, combined)
+            const sortedOrders = allOrders.sort((a, b) =>
+                new Date(b.createdAt) - new Date(a.createdAt)
+            );
+            setRecentOrders(sortedOrders.slice(0, 5));
 
             // Set low stock items
             setLowStockCrops(lowStock.slice(0, 5));
@@ -119,63 +144,67 @@ const FarmerDashboard = () => {
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-4 gap-4 mb-6">
+                    {/* Total Revenue */}
+                    <div className="card-premium" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: 'white' }}>
+                        <div className="flex items-center justify-between mb-3">
+                            <p style={{ fontSize: 'var(--font-size-sm)', opacity: 0.9 }}>Total Revenue</p>
+                            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255, 255, 255, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <FaRupeeSign />
+                            </div>
+                        </div>
+                        <p style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 700, marginBottom: 'var(--spacing-1)' }}>
+                            {formatPrice(stats.totalRevenue || 0)}
+                        </p>
+                        <p style={{ fontSize: 'var(--font-size-xs)', opacity: 0.8 }}>
+                            From {stats.totalOrders || 0} orders
+                        </p>
+                    </div>
+
+                    {/* Total Crops */}
                     <Link to="/farmer/crops" className="card-premium hover-3d" style={{ textDecoration: 'none', color: 'inherit' }}>
-                        <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center justify-between mb-3">
                             <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--gray-600)' }}>Total Crops</p>
                             <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--green-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary-green)' }}>
                                 <FaBox />
                             </div>
                         </div>
-                        <p style={{ fontSize: 'var(--font-size-3xl)', fontWeight: 700, color: 'var(--primary-green)' }}>
+                        <p style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 700, color: 'var(--primary-green)', marginBottom: 'var(--spacing-1)' }}>
                             {stats.totalCrops}
                         </p>
-                        <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--gray-600)', marginTop: 'var(--spacing-1)' }}>
+                        <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--gray-600)' }}>
                             {stats.activeCrops} active
                         </p>
                     </Link>
 
+                    {/* Completed Orders */}
                     <Link to="/farmer/consumer-orders" className="card-premium hover-3d" style={{ textDecoration: 'none', color: 'inherit' }}>
-                        <div className="flex items-center justify-between mb-2">
-                            <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--gray-600)' }}>Recent Orders</p>
+                        <div className="flex items-center justify-between mb-3">
+                            <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--gray-600)' }}>Completed</p>
                             <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--blue-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary-blue)' }}>
-                                <FaShoppingCart />
+                                <FaCheckCircle />
                             </div>
                         </div>
-                        <p style={{ fontSize: 'var(--font-size-3xl)', fontWeight: 700, color: 'var(--primary-blue)' }}>
-                            {recentOrders.length}
+                        <p style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 700, color: 'var(--primary-blue)', marginBottom: 'var(--spacing-1)' }}>
+                            {stats.completedOrders || 0}
                         </p>
-                        <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--gray-600)', marginTop: 'var(--spacing-1)' }}>
-                            New consumer orders
+                        <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--gray-600)' }}>
+                            Delivered orders
                         </p>
                     </Link>
 
+                    {/* Low Stock */}
                     <Link to="/farmer/inventory" className="card-premium hover-3d" style={{ textDecoration: 'none', color: 'inherit' }}>
-                        <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center justify-between mb-3">
                             <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--gray-600)' }}>Low Stock</p>
                             <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--orange-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--warning)' }}>
                                 <FaExclamationTriangle />
                             </div>
                         </div>
-                        <p style={{ fontSize: 'var(--font-size-3xl)', fontWeight: 700, color: 'var(--warning)' }}>
+                        <p style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 700, color: 'var(--warning)', marginBottom: 'var(--spacing-1)' }}>
                             {stats.lowStockItems}
                         </p>
-                        <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--gray-600)', marginTop: 'var(--spacing-1)' }}>
+                        <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--gray-600)' }}>
                             {stats.outOfStock} out of stock
-                        </p>
-                    </Link>
-
-                    <Link to="/farmer/analytics" className="card-premium hover-3d" style={{ textDecoration: 'none', color: 'inherit' }}>
-                        <div className="flex items-center justify-between mb-2">
-                            <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--gray-600)' }}>Analytics</p>
-                            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--purple-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary-purple)' }}>
-                                <FaChartLine />
-                            </div>
-                        </div>
-                        <p style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700 }}>
-                            View Stats
-                        </p>
-                        <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--gray-600)', marginTop: 'var(--spacing-1)' }}>
-                            Sales & performance
                         </p>
                     </Link>
                 </div>
@@ -200,10 +229,10 @@ const FarmerDashboard = () => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-6">
-                    {/* Recent Consumer Orders */}
+                    {/* Recent Orders (Consumer + Wholesale) */}
                     <div className="card-premium">
                         <div className="flex items-center justify-between mb-4">
-                            <h3>Recent Consumer Orders</h3>
+                            <h3>Recent Orders</h3>
                             <Link to="/farmer/consumer-orders" className="btn btn-sm btn-outline">
                                 View All
                             </Link>
@@ -212,38 +241,62 @@ const FarmerDashboard = () => {
                         {recentOrders.length === 0 ? (
                             <div className="text-center" style={{ padding: 'var(--spacing-8)' }}>
                                 <div style={{ fontSize: '3rem', marginBottom: 'var(--spacing-2)' }}>📦</div>
-                                <p style={{ color: 'var(--gray-600)' }}>No consumer orders yet</p>
+                                <p style={{ color: 'var(--gray-600)' }}>No orders yet</p>
                             </div>
                         ) : (
                             <div className="grid gap-3">
-                                {recentOrders.map((order) => (
-                                    <div key={order._id} style={{ padding: 'var(--spacing-3)', background: 'var(--gray-50)', borderRadius: 'var(--radius-md)', border: '1px solid var(--gray-200)' }}>
-                                        <div className="flex items-center justify-between mb-2">
-                                            <div>
-                                                <p style={{ fontWeight: 600, fontSize: 'var(--font-size-sm)' }}>
-                                                    Order #{order.orderNumber}
+                                {recentOrders.map((order) => {
+                                    const isWholesale = order.wholesaler || order.negotiation;
+                                    const orderType = isWholesale ? 'Wholesale' : 'Consumer';
+                                    const buyerName = isWholesale
+                                        ? (order.wholesaler?.name || 'Wholesaler')
+                                        : (order.buyer?.name || 'Customer');
+
+                                    return (
+                                        <div key={order._id} style={{ padding: 'var(--spacing-3)', background: 'var(--gray-50)', borderRadius: 'var(--radius-md)', border: '1px solid var(--gray-200)' }}>
+                                            <div className="flex items-center justify-between mb-2">
+                                                <div style={{ flex: 1 }}>
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <p style={{ fontWeight: 600, fontSize: 'var(--font-size-sm)' }}>
+                                                            Order #{order.orderNumber}
+                                                        </p>
+                                                        <span
+                                                            className="badge"
+                                                            style={{
+                                                                background: isWholesale ? 'var(--primary-green)' : 'var(--accent-blue)',
+                                                                color: 'white',
+                                                                fontSize: 'var(--font-size-xs)',
+                                                                padding: '2px 8px'
+                                                            }}
+                                                        >
+                                                            {orderType}
+                                                        </span>
+                                                    </div>
+                                                    <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--gray-600)' }}>
+                                                        {buyerName} • {formatDate(order.createdAt)}
+                                                    </p>
+                                                </div>
+                                                <span
+                                                    className="badge"
+                                                    style={{ background: getStatusBadgeColor(order.status || order.orderStatus), color: 'white', fontSize: 'var(--font-size-xs)' }}
+                                                >
+                                                    {(order.status || order.orderStatus).replace('_', ' ')}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--gray-700)' }}>
+                                                    {isWholesale
+                                                        ? `${order.quantity?.value || 0} ${order.quantity?.unit || ''}`
+                                                        : `${order.items?.length || 0} items`
+                                                    }
                                                 </p>
-                                                <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--gray-600)' }}>
-                                                    {order.buyer?.name} • {formatDate(order.createdAt)}
+                                                <p style={{ fontWeight: 700, color: 'var(--primary-green)' }}>
+                                                    {formatPrice(order.farmerTotal || order.totalAmount)}
                                                 </p>
                                             </div>
-                                            <span
-                                                className="badge"
-                                                style={{ background: getStatusBadgeColor(order.orderStatus), color: 'white', fontSize: 'var(--font-size-xs)' }}
-                                            >
-                                                {order.orderStatus.replace('_', ' ')}
-                                            </span>
                                         </div>
-                                        <div className="flex items-center justify-between">
-                                            <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--gray-700)' }}>
-                                                {order.items?.length || 0} items
-                                            </p>
-                                            <p style={{ fontWeight: 700, color: 'var(--primary-green)' }}>
-                                                {formatPrice(order.farmerTotal || order.totalAmount)}
-                                            </p>
-                                        </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
