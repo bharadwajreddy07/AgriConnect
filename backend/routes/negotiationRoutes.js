@@ -14,11 +14,11 @@ const router = express.Router();
 // Get user's negotiations
 router.get('/', protect, authorize('farmer', 'wholesaler'), getUserNegotiations);
 
-// Start negotiation (Wholesaler only)
+// Start negotiation (Farmer or Wholesaler)
 router.post(
     '/',
     protect,
-    authorize('wholesaler'),
+    authorize('farmer', 'wholesaler'),
     checkVerified,
     startNegotiation
 );
