@@ -28,6 +28,9 @@ const Navbar = () => {
                         <Link to="/farmer/crops/new" className="nav-link">List Crop</Link>
                         <Link to="/farmer/samples" className="nav-link">Samples</Link>
                         <Link to="/farmer/negotiations" className="nav-link">Negotiations</Link>
+                        <Link to="/farmer/consumer-orders" className="nav-link" style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)' }}>
+                            <FaBox /> Orders
+                        </Link>
                     </>
                 );
             case 'wholesaler':
@@ -36,6 +39,9 @@ const Navbar = () => {
                         <Link to="/wholesaler" className="nav-link">Dashboard</Link>
                         <Link to="/wholesaler/marketplace" className="nav-link">Marketplace</Link>
                         <Link to="/wholesaler/negotiations" className="nav-link">Negotiations</Link>
+                        <Link to="/wholesaler/orders" className="nav-link" style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)' }}>
+                            <FaBox /> Orders
+                        </Link>
                         <Link to="/wholesaler/cart" className="nav-link" style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)', position: 'relative' }}>
                             <FaShoppingCart /> Cart
                             {wholesalerCartCount > 0 && (

@@ -50,18 +50,20 @@ const FarmerDashboard = () => {
             // Combine both order types
             const allOrders = [...consumerOrders, ...wholesaleOrders];
 
-            // Calculate revenue from orders
-            const totalRevenue = allOrders.reduce((sum, order) => {
-                return sum + (order.farmerTotal || order.totalAmount || 0);
-            }, 0);
-
-            const pendingRevenue = allOrders
-                .filter(o => o.status === 'pending' || o.orderStatus === 'pending')
-                .reduce((sum, order) => sum + (order.farmerTotal || order.totalAmount || 0), 0);
-
+            // Filter completed (delivered) orders first
             const completedOrders = allOrders.filter(
                 o => o.status === 'delivered' || o.orderStatus === 'delivered'
             );
+
+            // Calculate revenue ONLY from completed/delivered orders
+            const totalRevenue = completedOrders.reduce((sum, order) => {
+                return sum + (order.farmerTotal || order.totalAmount || 0);
+            }, 0);
+
+            // Calculate pending revenue separately
+            const pendingRevenue = allOrders
+                .filter(o => o.status === 'pending' || o.orderStatus === 'pending')
+                .reduce((sum, order) => sum + (order.farmerTotal || order.totalAmount || 0), 0);
 
             // Calculate stats
             const activeCrops = crops.filter(c => c.status === 'approved' || c.status === 'active');
@@ -147,7 +149,7 @@ const FarmerDashboard = () => {
                     {/* Total Revenue */}
                     <div className="card-premium" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: 'white' }}>
                         <div className="flex items-center justify-between mb-3">
-                            <p style={{ fontSize: 'var(--font-size-sm)', opacity: 0.9 }}>Total Revenue</p>
+                            <p style={{ fontSize: 'var(--font-size-sm)', opacity: 0.9 }}>Total Earnings</p>
                             <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255, 255, 255, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <FaRupeeSign />
                             </div>
@@ -156,14 +158,30 @@ const FarmerDashboard = () => {
                             {formatPrice(stats.totalRevenue || 0)}
                         </p>
                         <p style={{ fontSize: 'var(--font-size-xs)', opacity: 0.8 }}>
-                            From {stats.totalOrders || 0} orders
+                            {stats.completedOrders || 0} completed orders
+                        </p>
+                    </div>
+
+                    {/* Pending Orders */}
+                    <div className="card-premium" style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', color: 'white' }}>
+                        <div className="flex items-center justify-between mb-3">
+                            <p style={{ fontSize: 'var(--font-size-sm)', opacity: 0.9 }}>Pending Orders</p>
+                            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255, 255, 255, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <FaClock />
+                            </div>
+                        </div>
+                        <p style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 700, marginBottom: 'var(--spacing-1)' }}>
+                            {stats.totalOrders - stats.completedOrders || 0}
+                        </p>
+                        <p style={{ fontSize: 'var(--font-size-xs)', opacity: 0.8 }}>
+                            Worth {formatPrice(stats.pendingRevenue || 0)}
                         </p>
                     </div>
 
                     {/* Total Crops */}
                     <Link to="/farmer/crops" className="card-premium hover-3d" style={{ textDecoration: 'none', color: 'inherit' }}>
                         <div className="flex items-center justify-between mb-3">
-                            <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--gray-600)' }}>Total Crops</p>
+                            <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--gray-600)' }}>My Crops</p>
                             <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--green-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary-green)' }}>
                                 <FaBox />
                             </div>
@@ -172,23 +190,7 @@ const FarmerDashboard = () => {
                             {stats.totalCrops}
                         </p>
                         <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--gray-600)' }}>
-                            {stats.activeCrops} active
-                        </p>
-                    </Link>
-
-                    {/* Completed Orders */}
-                    <Link to="/farmer/consumer-orders" className="card-premium hover-3d" style={{ textDecoration: 'none', color: 'inherit' }}>
-                        <div className="flex items-center justify-between mb-3">
-                            <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--gray-600)' }}>Completed</p>
-                            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--blue-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary-blue)' }}>
-                                <FaCheckCircle />
-                            </div>
-                        </div>
-                        <p style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 700, color: 'var(--primary-blue)', marginBottom: 'var(--spacing-1)' }}>
-                            {stats.completedOrders || 0}
-                        </p>
-                        <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--gray-600)' }}>
-                            Delivered orders
+                            {stats.activeCrops} active listings
                         </p>
                     </Link>
 

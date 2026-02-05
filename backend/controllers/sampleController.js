@@ -1,5 +1,6 @@
 import Sample from '../models/Sample.js';
 import Crop from '../models/Crop.js';
+import Chat from '../models/Chat.js';
 
 // @desc    Request a sample
 // @route   POST /api/samples/request
@@ -116,6 +117,40 @@ export const updateSampleStatus = async (req, res) => {
         // Update timestamps based on status
         if (status === 'sent') sample.sentDate = new Date();
         if (status === 'received') sample.receivedDate = new Date();
+
+        // When farmer accepts sample, create chat for negotiation
+        if (status === 'accepted' && isFarmer) {
+            // Check if chat already exists
+            const existingChat = await Chat.findOne({
+                participants: {
+                    farmer: sample.farmer,
+                    wholesaler: sample.wholesaler
+                }
+            });
+
+            if (!existingChat) {
+                // Create chat between farmer and wholesaler
+                await Chat.create({
+                    participants: {
+                        farmer: sample.farmer,
+                        wholesaler: sample.wholesaler,
+                    },
+                    messages: [
+                        {
+                            sender: sample.farmer,
+                            senderRole: 'farmer',
+                            content: `Sample accepted! Ready to negotiate for crop.`,
+                            messageType: 'system',
+                        },
+                    ],
+                    lastMessage: {
+                        content: `Sample accepted! Ready to negotiate for crop.`,
+                        timestamp: new Date(),
+                    },
+                });
+                console.log(`✅ Chat created between farmer ${sample.farmer} and wholesaler ${sample.wholesaler}`);
+            }
+        }
 
         await sample.save();
 

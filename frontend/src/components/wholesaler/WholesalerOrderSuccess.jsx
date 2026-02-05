@@ -6,13 +6,14 @@ const WholesalerOrderSuccess = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const orderCount = searchParams.get('count') || '1';
-    const [countdown, setCountdown] = useState(5);
+    const [countdown, setCountdown] = useState(10);
 
     useEffect(() => {
         const timer = setInterval(() => {
             setCountdown((prev) => {
                 if (prev <= 1) {
                     clearInterval(timer);
+                    navigate('/wholesaler/orders');
                     return 0;
                 }
                 return prev - 1;
@@ -20,7 +21,7 @@ const WholesalerOrderSuccess = () => {
         }, 1000);
 
         return () => clearInterval(timer);
-    }, []);
+    }, [navigate]);
 
     return (
         <div style={{

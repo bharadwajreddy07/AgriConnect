@@ -32,8 +32,29 @@ const ConsumerOrders = () => {
     const loadOrders = async () => {
         try {
             setLoading(true);
-            const response = await api.get('/marketplace/farmer/orders');
-            setOrders(response.data.data || []);
+
+            // Load both consumer and wholesale orders in parallel
+            const [consumerRes, wholesaleRes] = await Promise.all([
+                api.get('/marketplace/farmer/orders').catch(() => ({ data: { data: [] } })),
+                api.get('/wholesale-orders/farmer').catch(() => ({ data: { data: [] } })),
+            ]);
+
+            const consumerOrders = (consumerRes.data.data || []).map(order => ({
+                ...order,
+                orderType: 'consumer'
+            }));
+
+            const wholesaleOrders = (wholesaleRes.data.data || []).map(order => ({
+                ...order,
+                orderType: 'wholesale'
+            }));
+
+            // Combine and sort by date
+            const allOrders = [...consumerOrders, ...wholesaleOrders].sort(
+                (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+            );
+
+            setOrders(allOrders);
         } catch (error) {
             console.error('Error loading orders:', error);
             toast.error('Failed to load orders');
@@ -49,14 +70,23 @@ const ConsumerOrders = () => {
         }
 
         try {
-            // Update status
-            await api.put(`/marketplace/farmer/orders/${orderId}/status`, {
-                status: newStatus,
-            });
+            const isWholesale = selectedOrder?.orderType === 'wholesale';
 
-            // If shipped, add tracking info separately
-            if (newStatus === 'shipped' && (trackingInfo.courierName || trackingInfo.trackingNumber)) {
-                await api.put(`/marketplace/farmer/orders/${orderId}/tracking`, trackingInfo);
+            if (isWholesale) {
+                // Update wholesale order status
+                await api.put(`/wholesale-orders/${orderId}/status`, {
+                    status: newStatus,
+                });
+            } else {
+                // Update consumer order status
+                await api.put(`/marketplace/farmer/orders/${orderId}/status`, {
+                    status: newStatus,
+                });
+
+                // If shipped, add tracking info separately (consumer orders only)
+                if (newStatus === 'shipped' && (trackingInfo.courierName || trackingInfo.trackingNumber)) {
+                    await api.put(`/marketplace/farmer/orders/${orderId}/tracking`, trackingInfo);
+                }
             }
 
             toast.success('Order status updated');
@@ -105,21 +135,27 @@ const ConsumerOrders = () => {
     };
 
     const filteredOrders = orders.filter(order => {
-        if (filter === 'active' && ['delivered', 'cancelled'].includes(order.orderStatus)) {
+        // Determine status field based on order type
+        const status = order.orderType === 'wholesale' ? order.status : order.orderStatus;
+
+        if (filter === 'active' && ['delivered', 'cancelled'].includes(status)) {
             return false;
         }
-        if (filter === 'delivered' && order.orderStatus !== 'delivered') {
+        if (filter === 'delivered' && status !== 'delivered') {
             return false;
         }
-        if (filter === 'cancelled' && order.orderStatus !== 'cancelled') {
+        if (filter === 'cancelled' && status !== 'cancelled') {
             return false;
         }
 
         if (searchQuery) {
             const query = searchQuery.toLowerCase();
+            const buyerName = order.orderType === 'wholesale'
+                ? order.wholesaler?.name
+                : order.buyer?.name;
             return (
                 order.orderNumber.toLowerCase().includes(query) ||
-                order.buyer?.name?.toLowerCase().includes(query)
+                buyerName?.toLowerCase().includes(query)
             );
         }
 
@@ -139,9 +175,10 @@ const ConsumerOrders = () => {
             <div className="container">
                 {/* Header */}
                 <div className="mb-6">
-                    <h1 className="gradient-text">Consumer Orders</h1>
+                    <h1 className="gradient-text">All Orders</h1>
                     <p style={{ color: 'var(--gray-600)' }}>
                         {orders.length} {orders.length === 1 ? 'order' : 'orders'} total
+                        ({orders.filter(o => o.orderType === 'consumer').length} consumer, {orders.filter(o => o.orderType === 'wholesale').length} wholesale)
                     </p>
                 </div>
 
@@ -187,9 +224,14 @@ const ConsumerOrders = () => {
                 ) : (
                     <div className="grid gap-4">
                         {filteredOrders.map((order) => {
-                            // Filter items that belong to this farmer
-                            const myItems = order.items.filter(item => item.farmer?._id === order.items[0]?.farmer?._id);
-                            const myTotal = myItems.reduce((sum, item) => sum + item.total, 0);
+                            const isWholesale = order.orderType === 'wholesale';
+                            const status = isWholesale ? order.status : order.orderStatus;
+                            const buyerName = isWholesale ? order.wholesaler?.name : order.buyer?.name;
+                            const buyerPhone = isWholesale ? order.wholesaler?.phone : order.buyer?.phone;
+
+                            // For consumer orders, filter items that belong to this farmer
+                            const myItems = isWholesale ? [] : (order.items?.filter(item => item.farmer?._id === order.items[0]?.farmer?._id) || []);
+                            const myTotal = isWholesale ? (order.farmerTotal || order.totalAmount || 0) : myItems.reduce((sum, item) => sum + item.total, 0);
 
                             return (
                                 <div key={order._id} className="card-premium">
@@ -205,8 +247,8 @@ const ConsumerOrders = () => {
                                             }}
                                         >
                                             <img
-                                                src={myItems[0]?.crop?.images?.[0] || '/placeholder.jpg'}
-                                                alt={myItems[0]?.crop?.name}
+                                                src={isWholesale ? (order.crop?.images?.[0] || '/placeholder.jpg') : (myItems[0]?.crop?.images?.[0] || '/placeholder.jpg')}
+                                                alt={isWholesale ? order.crop?.name : myItems[0]?.crop?.name}
                                                 style={{
                                                     width: '100%',
                                                     height: '100%',
@@ -226,11 +268,22 @@ const ConsumerOrders = () => {
                                                         <span
                                                             className="badge"
                                                             style={{
-                                                                background: getStatusBadgeColor(order.orderStatus),
+                                                                background: getStatusBadgeColor(status),
                                                                 color: 'white',
                                                             }}
                                                         >
-                                                            {order.orderStatus.replace('_', ' ')}
+                                                            {status.replace('_', ' ')}
+                                                        </span>
+                                                        <span
+                                                            className="badge"
+                                                            style={{
+                                                                background: isWholesale ? 'var(--primary-green)' : 'var(--accent-blue)',
+                                                                color: 'white',
+                                                                fontSize: 'var(--font-size-xs)',
+                                                                padding: '2px 8px'
+                                                            }}
+                                                        >
+                                                            {isWholesale ? 'WHOLESALE' : 'CONSUMER'}
                                                         </span>
                                                     </div>
                                                     <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--gray-600)' }}>
@@ -242,30 +295,36 @@ const ConsumerOrders = () => {
                                                         {formatPrice(myTotal)}
                                                     </div>
                                                     <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--gray-600)' }}>
-                                                        {myItems.length} {myItems.length === 1 ? 'item' : 'items'}
+                                                        {isWholesale ? `${order.quantity?.value || 0} ${order.quantity?.unit || ''}` : `${myItems.length} ${myItems.length === 1 ? 'item' : 'items'}`}
                                                     </div>
                                                 </div>
                                             </div>
 
                                             {/* Items */}
                                             <div style={{ marginBottom: 'var(--spacing-3)' }}>
-                                                {myItems.map((item, index) => (
-                                                    <p key={index} style={{ fontSize: 'var(--font-size-sm)', color: 'var(--gray-700)', marginBottom: 'var(--spacing-1)' }}>
-                                                        {item.crop?.name} × {item.quantity} - {formatPrice(item.total)}
+                                                {isWholesale ? (
+                                                    <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--gray-700)', marginBottom: 'var(--spacing-1)' }}>
+                                                        {order.crop?.name} × {order.quantity?.value} {order.quantity?.unit}
                                                     </p>
-                                                ))}
+                                                ) : (
+                                                    myItems.map((item, index) => (
+                                                        <p key={index} style={{ fontSize: 'var(--font-size-sm)', color: 'var(--gray-700)', marginBottom: 'var(--spacing-1)' }}>
+                                                            {item.crop?.name} × {item.quantity} - {formatPrice(item.total)}
+                                                        </p>
+                                                    ))
+                                                )}
                                             </div>
 
                                             {/* Customer Info */}
                                             <div className="grid grid-cols-2 gap-3 mb-3">
                                                 <div style={{ padding: 'var(--spacing-2)', background: 'var(--gray-50)', borderRadius: 'var(--radius-md)' }}>
                                                     <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--gray-600)', marginBottom: 'var(--spacing-1)' }}>
-                                                        Customer
+                                                        {isWholesale ? 'Wholesaler' : 'Customer'}
                                                     </p>
-                                                    <p style={{ fontWeight: 600 }}>{order.buyer?.name}</p>
+                                                    <p style={{ fontWeight: 600 }}>{buyerName}</p>
                                                     <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--gray-600)' }}>
                                                         <FaPhone style={{ marginRight: '4px' }} />
-                                                        {order.buyer?.phone}
+                                                        {buyerPhone}
                                                     </p>
                                                 </div>
                                                 <div style={{ padding: 'var(--spacing-2)', background: 'var(--gray-50)', borderRadius: 'var(--radius-md)' }}>
@@ -274,19 +333,19 @@ const ConsumerOrders = () => {
                                                     </p>
                                                     <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--gray-700)' }}>
                                                         <FaMapMarkerAlt style={{ marginRight: '4px' }} />
-                                                        {order.deliveryAddress.city}, {order.deliveryAddress.state}
+                                                        {order.deliveryAddress?.city || 'N/A'}, {order.deliveryAddress?.state || 'N/A'}
                                                     </p>
                                                 </div>
                                             </div>
 
                                             {/* Actions */}
                                             <div className="flex gap-2">
-                                                {order.orderStatus !== 'delivered' && order.orderStatus !== 'cancelled' && (
+                                                {status !== 'delivered' && status !== 'cancelled' && (
                                                     <button
                                                         onClick={() => {
                                                             setSelectedOrder(order);
                                                             setShowStatusModal(true);
-                                                            setNewStatus(order.orderStatus);
+                                                            setNewStatus(status);
                                                         }}
                                                         className="btn btn-primary btn-sm"
                                                     >
@@ -294,10 +353,10 @@ const ConsumerOrders = () => {
                                                     </button>
                                                 )}
                                                 <a
-                                                    href={`tel:${order.buyer?.phone}`}
+                                                    href={`tel:${buyerPhone}`}
                                                     className="btn btn-outline btn-sm"
                                                 >
-                                                    <FaPhone /> Contact Customer
+                                                    <FaPhone /> Contact {isWholesale ? 'Wholesaler' : 'Customer'}
                                                 </a>
                                             </div>
                                         </div>
@@ -342,7 +401,7 @@ const ConsumerOrders = () => {
                                     value={newStatus}
                                     onChange={(e) => setNewStatus(e.target.value)}
                                 >
-                                    <option value="placed">Placed</option>
+                                    <option value="pending">Pending</option>
                                     <option value="confirmed">Confirmed</option>
                                     <option value="processing">Processing</option>
                                     <option value="packed">Packed</option>
@@ -352,7 +411,7 @@ const ConsumerOrders = () => {
                                 </select>
                             </div>
 
-                            {newStatus === 'shipped' && (
+                            {newStatus === 'shipped' && selectedOrder?.orderType !== 'wholesale' && (
                                 <>
                                     <div style={{ marginBottom: 'var(--spacing-3)' }}>
                                         <label className="form-label">Courier Name</label>

@@ -155,7 +155,8 @@ const ConsumerMarketplace = () => {
                                 <option value="Fruits">Fruits</option>
                                 <option value="Cereals">Cereals</option>
                                 <option value="Pulses">Pulses</option>
-                                <option value="Spices">Spices</option>
+                                <option value="Oilseeds">Oilseeds</option>
+                                <option value="Cash Crops">Cash Crops</option>
                             </select>
 
                             <select
@@ -294,7 +295,7 @@ const ConsumerMarketplace = () => {
                                                 {formatPrice(crop.consumerPrice)}
                                             </div>
                                             <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--gray-500)' }}>
-                                                per {crop.quantity.unit}
+                                                per kg
                                             </div>
                                         </div>
                                         <div className="badge badge-success">

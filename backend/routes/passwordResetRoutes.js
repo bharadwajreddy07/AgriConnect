@@ -1,11 +1,15 @@
 import express from 'express';
-import crypto from 'crypto';
 import User from '../models/User.js';
 
 const router = express.Router();
 
+// Generate 6-digit OTP
+const generateOTP = () => {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
 // @route   POST /api/auth/forgot-password
-// @desc    Send password reset email
+// @desc    Generate OTP for password reset
 // @access  Public
 router.post('/forgot-password', async (req, res) => {
     try {
@@ -19,34 +23,31 @@ router.post('/forgot-password', async (req, res) => {
 
         if (!user) {
             // Don't reveal if user exists or not for security
-            return res.json({ message: 'If that email exists, a reset link has been sent' });
+            return res.json({
+                success: true,
+                message: 'If that email exists, an OTP has been sent'
+            });
         }
 
-        // Generate reset token
-        const resetToken = crypto.randomBytes(32).toString('hex');
-        user.resetPasswordToken = crypto
-            .createHash('sha256')
-            .update(resetToken)
-            .digest('hex');
-        user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+        // Generate 6-digit OTP
+        const otp = generateOTP();
+        user.resetPasswordOTP = otp;
+        user.resetPasswordOTPExpires = Date.now() + 600000; // 10 minutes
 
         await user.save();
 
-        // Create reset URL
-        const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password/${resetToken}`;
-
-        // TODO: Send email with reset link
-        // For now, just log it to console
-        console.log('\n📧 PASSWORD RESET EMAIL\n');
+        // In production, send OTP via email/SMS
+        // For now, log it to console
+        console.log('\n🔐 PASSWORD RESET OTP\n');
         console.log(`To: ${user.email}`);
-        console.log(`Reset Link: ${resetUrl}`);
-        console.log(`\nClick the link above to reset your password. This link expires in 1 hour.\n`);
+        console.log(`OTP: ${otp}`);
+        console.log(`\nThis OTP expires in 10 minutes.\n`);
 
         res.json({
             success: true,
-            message: 'Password reset link sent to email',
-            // In development, include the link in response
-            ...(process.env.NODE_ENV === 'development' && { resetUrl }),
+            message: 'OTP sent successfully. Please check your email.',
+            // In development, include the OTP in response
+            ...(process.env.NODE_ENV === 'development' && { otp }),
         });
     } catch (error) {
         console.error('Forgot password error:', error);
@@ -54,65 +55,66 @@ router.post('/forgot-password', async (req, res) => {
     }
 });
 
-// @route   GET /api/auth/verify-reset-token/:token
-// @desc    Verify if reset token is valid
+// @route   POST /api/auth/verify-otp
+// @desc    Verify OTP
 // @access  Public
-router.get('/verify-reset-token/:token', async (req, res) => {
+router.post('/verify-otp', async (req, res) => {
     try {
-        const hashedToken = crypto
-            .createHash('sha256')
-            .update(req.params.token)
-            .digest('hex');
+        const { email, otp } = req.body;
+
+        if (!email || !otp) {
+            return res.status(400).json({ message: 'Email and OTP are required' });
+        }
 
         const user = await User.findOne({
-            resetPasswordToken: hashedToken,
-            resetPasswordExpires: { $gt: Date.now() },
+            email: email.toLowerCase(),
+            resetPasswordOTP: otp,
+            resetPasswordOTPExpires: { $gt: Date.now() },
         });
 
         if (!user) {
-            return res.status(400).json({ message: 'Invalid or expired reset token' });
+            return res.status(400).json({ message: 'Invalid or expired OTP' });
         }
 
-        res.json({ success: true, message: 'Token is valid' });
+        res.json({
+            success: true,
+            message: 'OTP verified successfully'
+        });
     } catch (error) {
-        console.error('Verify token error:', error);
+        console.error('Verify OTP error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
 
 // @route   POST /api/auth/reset-password
-// @desc    Reset password with token
+// @desc    Reset password with OTP
 // @access  Public
 router.post('/reset-password', async (req, res) => {
     try {
-        const { token, password } = req.body;
+        const { email, otp, password } = req.body;
 
-        if (!token || !password) {
-            return res.status(400).json({ message: 'Token and password are required' });
+        if (!email || !otp || !password) {
+            return res.status(400).json({ message: 'Email, OTP, and password are required' });
         }
 
         if (password.length < 6) {
             return res.status(400).json({ message: 'Password must be at least 6 characters' });
         }
 
-        const hashedToken = crypto
-            .createHash('sha256')
-            .update(token)
-            .digest('hex');
-
         const user = await User.findOne({
-            resetPasswordToken: hashedToken,
-            resetPasswordExpires: { $gt: Date.now() },
+            email: email.toLowerCase(),
+            resetPasswordOTP: otp,
+            resetPasswordOTPExpires: { $gt: Date.now() },
         });
 
         if (!user) {
-            return res.status(400).json({ message: 'Invalid or expired reset token' });
+            return res.status(400).json({ message: 'Invalid or expired OTP' });
         }
 
         // Set new password (will be hashed by pre-save hook)
         user.password = password;
-        user.resetPasswordToken = undefined;
-        user.resetPasswordExpires = undefined;
+        user.resetPasswordOTP = undefined;
+        user.resetPasswordOTPExpires = undefined;
         await user.save();
 
         res.json({

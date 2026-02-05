@@ -11,6 +11,7 @@ import {
     deleteCrop,
     getFarmerCrops,
     approveCrop,
+    exportCropsToCSV,
 } from '../controllers/cropController.js';
 import { protect, authorize, checkVerified } from '../middleware/authMiddleware.js';
 import { uploadCropMedia } from '../middleware/uploadMiddleware.js';
@@ -22,6 +23,7 @@ router.get('/', getCrops);
 
 // Protected routes - Farmer only (specific routes before parameterized routes)
 router.get('/my-crops', protect, authorize('farmer'), getMyCrops);
+router.get('/export', protect, authorize('farmer'), exportCropsToCSV);
 router.post('/bulk-delete', protect, authorize('farmer'), bulkDeleteCrops);
 
 router.post(

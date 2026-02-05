@@ -385,3 +385,48 @@ export const approveCrop = async (req, res) => {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
+
+// @desc    Export farmer's crops to CSV
+// @route   GET /api/crops/export
+// @access  Private (Farmer)
+export const exportCropsToCSV = async (req, res) => {
+    try {
+        const crops = await Crop.find({ farmer: req.user._id }).sort({ createdAt: -1 });
+
+        if (crops.length === 0) {
+            return res.status(404).json({ message: 'No crops to export' });
+        }
+
+        // CSV Headers
+        const headers = ['Name', 'Category', 'Season', 'Price (₹)', 'Stock', 'Unit', 'Status', 'Consumer Price', 'Quality Grade', 'Organic', 'Location'];
+
+        // Convert crops to CSV rows
+        const rows = crops.map(crop => [
+            crop.name,
+            crop.category,
+            crop.season,
+            crop.expectedPrice,
+            crop.stockQuantity || crop.quantity?.value || 0,
+            crop.quantity?.unit || 'unit',
+            crop.status,
+            crop.consumerPrice || 'N/A',
+            crop.qualityGrade || 'Standard',
+            crop.organicCertified ? 'Yes' : 'No',
+            `${crop.location?.district || ''}, ${crop.location?.state || ''}`
+        ]);
+
+        // Combine headers and rows
+        const csvContent = [
+            headers.join(','),
+            ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+        ].join('\n');
+
+        // Set response headers for CSV download
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename="my-crops-${Date.now()}.csv"`);
+        res.send(csvContent);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};

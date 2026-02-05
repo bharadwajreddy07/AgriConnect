@@ -11,6 +11,7 @@ import {
     FaSearch,
     FaFilter,
     FaExclamationTriangle,
+    FaDownload,
 } from 'react-icons/fa';
 import api from '../../services/api';
 import { formatPrice } from '../../utils/cartUtils';
@@ -100,6 +101,28 @@ const MyCrops = () => {
         }
     };
 
+    const handleExportCSV = async () => {
+        try {
+            const response = await api.get('/crops/export', {
+                responseType: 'blob'
+            });
+
+            // Create a download link
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `my-crops-${Date.now()}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+
+            toast.success('Crops exported successfully');
+        } catch (error) {
+            console.error('Error exporting crops:', error);
+            toast.error('Failed to export crops');
+        }
+    };
+
     const toggleSelectCrop = (cropId) => {
         setSelectedCrops(prev =>
             prev.includes(cropId)
@@ -151,9 +174,14 @@ const MyCrops = () => {
                             {crops.length} {crops.length === 1 ? 'crop' : 'crops'} listed
                         </p>
                     </div>
-                    <Link to="/farmer/crops/new" className="btn btn-primary">
-                        <FaPlus /> Add New Crop
-                    </Link>
+                    <div className="flex gap-3">
+                        <button onClick={handleExportCSV} className="btn btn-outline">
+                            <FaDownload /> Export CSV
+                        </button>
+                        <Link to="/farmer/crops/new" className="btn btn-primary">
+                            <FaPlus /> Add New Crop
+                        </Link>
+                    </div>
                 </div>
 
                 {/* Filters and Actions */}

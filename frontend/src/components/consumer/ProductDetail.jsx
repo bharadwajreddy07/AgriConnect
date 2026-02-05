@@ -201,7 +201,7 @@ const ProductDetail = () => {
                                         Available Stock
                                     </p>
                                     <p style={{ fontWeight: 600, color: product.stockQuantity < 10 ? 'var(--error)' : 'var(--success)' }}>
-                                        {product.stockQuantity} {product.quantity.unit}
+                                        {product.stockQuantity} kg
                                     </p>
                                 </div>
                             </div>
@@ -280,7 +280,7 @@ const ProductDetail = () => {
                                     {formatPrice(product.consumerPrice)}
                                 </div>
                                 <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--gray-600)' }}>
-                                    per {product.quantity.unit}
+                                    per kg
                                 </div>
                             </div>
 
