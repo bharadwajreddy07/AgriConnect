@@ -275,41 +275,8 @@ export const resetPassword = async (req, res) => {
             success: true,
             message: 'Password reset successfully',
         });
-    };
-
-
-    // @desc    Reset password directly with email and new password
-    // @route   POST /api/auth/reset-password-direct
-    // @access  Public
-    export const resetPasswordDirect = async (req, res) => {
-        try {
-            const { email, newPassword } = req.body;
-
-            if (!email || !newPassword) {
-                return res.status(400).json({ message: 'Email and new password are required' });
-            }
-
-            if (newPassword.length < 6) {
-                return res.status(400).json({ message: 'Password must be at least 6 characters' });
-            }
-
-            // Find user by email
-            const user = await User.findOne({ email }).select('+password');
-
-            if (!user) {
-                return res.status(404).json({ message: 'User not found with this email' });
-            }
-
-            // Update password
-            user.password = newPassword;
-            await user.save();
-
-            res.json({
-                success: true,
-                message: 'Password updated successfully',
-            });
-        } catch (error) {
-            console.error('Direct reset password error:', error);
-            res.status(500).json({ message: 'Server error', error: error.message });
-        }
-    };
+    } catch (error) {
+        console.error('Reset password error:', error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};

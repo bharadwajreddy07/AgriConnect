@@ -268,14 +268,14 @@ const Home = () => {
 
                     <div className="grid grid-cols-4 gap-6">
                         {[
-                            { name: 'Basmati Rice', image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=800&q=80', season: 'Kharif', price: '50', location: 'Punjab' },
-                            { name: 'Alphonso Mangoes', image: 'https://images.unsplash.com/photo-1601493700631-2b16ec4b4716?w=800&q=80', season: 'Zaid', price: '120', location: 'Maharashtra' },
-                            { name: 'Tomatoes', image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=800&q=80', season: 'Year-Round', price: '25', location: 'Karnataka' },
-                            { name: 'Green Grapes', image: 'https://images.unsplash.com/photo-1537640538965-17562995e9bb?w=800&q=80', season: 'Rabi', price: '50', location: 'Maharashtra' },
-                            { name: 'Wheat', image: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=800&q=80', season: 'Rabi', price: '22', location: 'Haryana' },
-                            { name: 'Chickpeas (Kabuli)', image: 'https://images.unsplash.com/photo-1610440042657-612c396ff084?w=800&q=80', season: 'Rabi', price: '65', location: 'Rajasthan' },
-                            { name: 'Oranges (Nagpur)', image: 'https://images.unsplash.com/photo-1611080626919-7cf5a9dbab5b?w=800&q=80', season: 'Rabi', price: '32', location: 'Maharashtra' },
-                            { name: 'Red Onions', image: 'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=800&q=80', season: 'Rabi', price: '18', location: 'Maharashtra' },
+                            { name: 'Basmati Rice', image: '/images/crops/paddy.png', season: 'Kharif', price: '85', location: 'Punjab' },
+                            { name: 'Alphonso Mangoes', image: '/images/crops/mangoes.png', season: 'Zaid', price: '120', location: 'Maharashtra' },
+                            { name: 'Tomatoes', image: '/images/crops/tomatoes.png', season: 'Year-Round', price: '25', location: 'Karnataka' },
+                            { name: 'Green Grapes', image: '/images/crops/grapes.png', season: 'Rabi', price: '50', location: 'Maharashtra' },
+                            { name: 'Wheat', image: '/images/crops/wheat.png', season: 'Rabi', price: '22', location: 'Haryana' },
+                            { name: 'Chickpeas (Kabuli)', image: '/images/crops/chickpeas.png', season: 'Rabi', price: '65', location: 'Rajasthan' },
+                            { name: 'Oranges (Nagpur)', image: '/images/crops/oranges.png', season: 'Rabi', price: '32', location: 'Maharashtra' },
+                            { name: 'Red Onions', image: '/images/crops/onions.png', season: 'Rabi', price: '35', location: 'Maharashtra' },
                         ].map((crop, index) => (
                             <div key={index} className="crop-card hover-3d">
                                 <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 'var(--radius-2xl) var(--radius-2xl) 0 0' }}>
