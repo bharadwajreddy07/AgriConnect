@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url';
 import fs from 'fs';
 import passport from 'passport';
 import session from 'express-session';
+import User from './models/User.js';
 
 // Load environment variables
 dotenv.config();
@@ -50,11 +51,16 @@ const io = new Server(httpServer, {
     cors: {
         origin: process.env.FRONTEND_URL || 'http://localhost:3000',
         methods: ['GET', 'POST'],
+        credentials: true
     },
 });
 
+
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
@@ -103,7 +109,7 @@ app.use('/api/wholesale-orders', (req, res, next) => {
     console.log('User:', req.user?.email || 'Not authenticated');
     next();
 }, wholesaleOrderRoutes);
-import User from './models/User.js';
+
 app.get('/api/seed', async (req, res) => {
     try {
         const farmer = await User.findOne({ email: 'farmer@test.com' });
