@@ -92,16 +92,24 @@ export const AuthProvider = ({ children }) => {
         setUser((prev) => ({ ...prev, ...updatedData }));
     };
 
+    const loginWithToken = async (authToken) => {
+        localStorage.setItem('token', authToken);
+        setToken(authToken);
+        api.defaults.headers.common.Authorization = 'Bearer ' + authToken;
+        const response = await api.get('/auth/profile');
+        setUser(response.data);
+        return response.data;
+    };
+
     const value = {
         user,
         loading,
         token,
         login,
         register,
+        loginWithToken,
         logout,
         updateUser,
-        setUser,
-        setToken,
         isAuthenticated: !!user,
     };
 

@@ -2,12 +2,11 @@ import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
-import api from '../../services/api';
 
 const GoogleCallback = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    const { setUser, setToken } = useAuth();
+    const { loginWithToken } = useAuth();
 
     useEffect(() => {
         const token = searchParams.get('token');
@@ -21,18 +20,8 @@ const GoogleCallback = () => {
         }
 
         if (token && role) {
-            // Store token and redirect
-            setToken(token);
-            localStorage.setItem('token', token);
-
-            // Fetch user data
-            api.get('/auth/profile', {
-                headers: {
-                    Authorization: 'Bearer ' + token,
-                },
-            })
-                .then((response) => {
-                    setUser(response.data);
+            loginWithToken(token)
+                .then(() => {
                     toast.success('Login successful!');
                     navigate('/' + role);
                 })
@@ -45,7 +34,7 @@ const GoogleCallback = () => {
             toast.error('Invalid authentication response');
             navigate('/login');
         }
-    }, [searchParams, navigate, setUser, setToken]);
+    }, [searchParams, navigate, loginWithToken]);
 
     return (
         <div style={{
