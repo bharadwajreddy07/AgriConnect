@@ -3,7 +3,8 @@ import mongoose from 'mongoose';
 const connectDB = async () => {
   try {
     const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI;
-    const fallbackDevUri = 'mongodb://127.0.0.1:27017/agrimart';
+    const defaultDbName = process.env.DB_NAME || 'agrimart';
+    const fallbackDevUri = `mongodb://127.0.0.1:27017/${defaultDbName}`;
     const isProduction = process.env.NODE_ENV === 'production';
     let finalMongoUri = mongoUri;
 

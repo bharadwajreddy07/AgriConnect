@@ -68,7 +68,7 @@ const corsOptions = {
         if (isAllowedOrigin(origin)) {
             return callback(null, true);
         }
-        return callback(new Error(`CORS blocked for origin: ${origin}`));
+        return callback(new Error('Origin not allowed'));
     },
     credentials: true,
 };
@@ -80,7 +80,7 @@ const io = new Server(httpServer, {
             if (isAllowedOrigin(origin)) {
                 return callback(null, true);
             }
-            return callback(new Error(`Socket CORS blocked for origin: ${origin}`));
+            return callback(new Error('Origin not allowed'));
         },
         methods: ['GET', 'POST'],
         credentials: true
