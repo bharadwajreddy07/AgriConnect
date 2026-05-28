@@ -1,3 +1,4 @@
+import axios from 'axios';
 import config from '../utils/config';
 
 // Create axios instance

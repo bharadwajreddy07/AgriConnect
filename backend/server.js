@@ -46,10 +46,42 @@ const app = express();
 // Create HTTP server
 const httpServer = createServer(app);
 
+const configuredFrontendOrigins = (process.env.FRONTEND_URL || '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+const allowedOrigins = [
+    ...new Set([
+        ...configuredFrontendOrigins,
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+        'http://localhost:5173',
+        'http://127.0.0.1:5173',
+    ]),
+];
+
+const isAllowedOrigin = (origin) => !origin || allowedOrigins.includes(origin);
+
+const corsOptions = {
+    origin: (origin, callback) => {
+        if (isAllowedOrigin(origin)) {
+            return callback(null, true);
+        }
+        return callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
+    credentials: true,
+};
+
 // Initialize Socket.io
 const io = new Server(httpServer, {
     cors: {
-        origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+        origin: (origin, callback) => {
+            if (isAllowedOrigin(origin)) {
+                return callback(null, true);
+            }
+            return callback(new Error(`Socket CORS blocked for origin: ${origin}`));
+        },
         methods: ['GET', 'POST'],
         credentials: true
     },
@@ -57,10 +89,7 @@ const io = new Server(httpServer, {
 
 
 // Middleware
-app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-    credentials: true
-}));
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));

@@ -3,6 +3,7 @@ import { toast } from 'react-toastify';
 import api from '../../services/api';
 import { getRelativeTime } from '../../utils/cropData';
 import io from 'socket.io-client';
+import config from '../../utils/config';
 
 const ChatBox = ({ negotiationId, currentUser }) => {
     const [messages, setMessages] = useState([]);
@@ -16,7 +17,7 @@ const ChatBox = ({ negotiationId, currentUser }) => {
         loadMessages();
 
         // Initialize Socket.io connection
-        socketRef.current = io(import.meta.env.VITE_API_URL || 'http://localhost:5000');
+        socketRef.current = io(config.SOCKET_URL);
 
         // Join negotiation room
         socketRef.current.emit('join_negotiation', negotiationId);

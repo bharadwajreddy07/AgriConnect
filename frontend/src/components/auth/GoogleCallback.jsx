@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
+import api from '../../services/api';
 
 const GoogleCallback = () => {
     const [searchParams] = useSearchParams();
@@ -25,23 +26,17 @@ const GoogleCallback = () => {
             localStorage.setItem('token', token);
 
             // Fetch user data
-            fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/me`, {
+            api.get('/auth/profile', {
                 headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+                    Authorization: 'Bearer ' + token,
+                },
             })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        setUser(data.user);
-                        toast.success('Login successful!');
-                        navigate(`/${role}`);
-                    } else {
-                        toast.error('Failed to fetch user data');
-                        navigate('/login');
-                    }
+                .then((response) => {
+                    setUser(response.data);
+                    toast.success('Login successful!');
+                    navigate('/' + role);
                 })
-                .catch(err => {
+                .catch((err) => {
                     console.error('Error fetching user:', err);
                     toast.error('Authentication failed');
                     navigate('/login');

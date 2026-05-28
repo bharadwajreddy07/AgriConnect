@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { FaEye, FaEyeSlash, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
+import config from '../../utils/config';
 
 const ResetPassword = () => {
     const [password, setPassword] = useState('');
@@ -19,7 +20,7 @@ const ResetPassword = () => {
 
     const verifyToken = async () => {
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/verify-reset-token/${token}`);
+            const response = await fetch(`${config.API_URL}/auth/verify-reset-token/${token}`);
             const data = await response.json();
             setTokenValid(response.ok);
             if (!response.ok) {
@@ -49,7 +50,7 @@ const ResetPassword = () => {
             case 2:
                 return { strength: 40, label: 'Fair', color: 'var(--warning)' };
             case 3:
-                return { strength: 60, label: 'Good', color: 'var(--blue-500)' };
+                return { strength: 60, label: 'Good', color: 'var(--sky-500)' };
             case 4:
                 return { strength: 80, label: 'Strong', color: 'var(--success)' };
             case 5:
@@ -74,7 +75,7 @@ const ResetPassword = () => {
 
         setLoading(true);
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/reset-password`, {
+            const response = await fetch(`${config.API_URL}/auth/reset-password`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ token, password }),

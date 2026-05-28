@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
+import config from '../../utils/config';
 
 const ForgotPassword = () => {
     const [email, setEmail] = useState('');
@@ -20,7 +21,7 @@ const ForgotPassword = () => {
 
         setLoading(true);
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/forgot-password`, {
+            const response = await fetch(`${config.API_URL}/auth/forgot-password`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email }),
