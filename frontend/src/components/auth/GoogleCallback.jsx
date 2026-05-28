@@ -23,7 +23,7 @@ const GoogleCallback = () => {
             loginWithToken(token)
                 .then(() => {
                     toast.success('Login successful!');
-                    navigate('/' + role);
+                    navigate(`/${role}`);
                 })
                 .catch((err) => {
                     console.error('Error fetching user:', err);

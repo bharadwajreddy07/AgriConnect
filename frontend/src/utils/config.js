@@ -1,4 +1,4 @@
-const stripTrailingSlash = (value) => value.replace(/\/+$/, '');
+const stripTrailingSlash = (value) => String(value || '').replace(/\/+$/, '');
 
 const defaultApiOrigin = 'http://localhost:5000';
 const rawApiUrl = (import.meta.env.VITE_API_URL || defaultApiOrigin).trim();
