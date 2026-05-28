@@ -93,12 +93,20 @@ export const AuthProvider = ({ children }) => {
     };
 
     const loginWithToken = async (authToken) => {
-        localStorage.setItem('token', authToken);
-        setToken(authToken);
-        api.defaults.headers.common.Authorization = 'Bearer ' + authToken;
-        const response = await api.get('/auth/profile');
-        setUser(response.data);
-        return response.data;
+        try {
+            api.defaults.headers.common.Authorization = 'Bearer ' + authToken;
+            const response = await api.get('/auth/profile');
+            localStorage.setItem('token', authToken);
+            setToken(authToken);
+            setUser(response.data);
+            return response.data;
+        } catch (error) {
+            localStorage.removeItem('token');
+            delete api.defaults.headers.common.Authorization;
+            setToken(null);
+            setUser(null);
+            throw error;
+        }
     };
 
     const value = {

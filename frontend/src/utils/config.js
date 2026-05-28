@@ -1,7 +1,7 @@
 const stripTrailingSlash = (value) => value.replace(/\/+$/, '');
 
 const defaultApiOrigin = 'http://localhost:5000';
-const rawApiUrl = (import.meta.env.VITE_API_URL || `${defaultApiOrigin}/api`).trim();
+const rawApiUrl = (import.meta.env.VITE_API_URL || defaultApiOrigin).trim();
 const normalizedApiUrl = stripTrailingSlash(rawApiUrl);
 const apiUrl = normalizedApiUrl.endsWith('/api') ? normalizedApiUrl : `${normalizedApiUrl}/api`;
 
