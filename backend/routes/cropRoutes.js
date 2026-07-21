@@ -35,9 +35,9 @@ router.post(
     createCrop
 );
 
-// Parameterized routes (must come after specific routes)
-router.get('/:id', getCropById);
+// Parameterized routes (specific before generic)
 router.get('/farmer/:farmerId', getFarmerCrops);
+router.get('/:id', getCropById);
 
 router.put(
     '/:id',

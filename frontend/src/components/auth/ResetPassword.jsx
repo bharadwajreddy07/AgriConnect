@@ -19,7 +19,7 @@ const ResetPassword = () => {
 
     const verifyToken = async () => {
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/verify-reset-token/${token}`);
+            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5004'}/api/auth/verify-reset-token/${token}`);
             const data = await response.json();
             setTokenValid(response.ok);
             if (!response.ok) {
@@ -74,7 +74,7 @@ const ResetPassword = () => {
 
         setLoading(true);
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/reset-password`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5006'}/api/auth/reset-password`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ token, password }),

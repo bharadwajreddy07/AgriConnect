@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useI18n } from '../../i18n/i18n';
 import { toast } from 'react-toastify';
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaEye, FaEyeSlash, FaEnvelope, FaLock, FaTractor } from 'react-icons/fa';
 
 const Login = () => {
     const [formData, setFormData] = useState({
@@ -12,6 +13,7 @@ const Login = () => {
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const { login } = useAuth();
+    const { t } = useI18n();
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -35,96 +37,158 @@ const Login = () => {
     };
 
     return (
-        <div style={{
-            minHeight: '100vh',
-            background: 'var(--gray-50)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: 'var(--spacing-4)',
-        }}>
-            <div style={{
-                maxWidth: '450px',
-                width: '100%',
-                background: 'white',
-                borderRadius: 'var(--radius-xl)',
-                boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)',
-                padding: 'var(--spacing-8)',
-            }}>
-                {/* Header */}
-                <div style={{
-                    textAlign: 'center',
-                    marginBottom: 'var(--spacing-8)',
-                }}>
-                    <h2 style={{
-                        fontSize: 'var(--font-size-2xl)',
-                        fontWeight: 700,
-                        color: 'var(--gray-900)',
-                        marginBottom: 'var(--spacing-2)',
-                    }}>
-                        Welcome Back
+        <div
+            style={{
+                minHeight: '100vh',
+                position: 'relative',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 'var(--spacing-6)',
+                background: 'linear-gradient(135deg, rgba(6, 78, 59, 0.95) 0%, rgba(5, 150, 105, 0.9) 100%)',
+                overflow: 'hidden',
+            }}
+        >
+            {/* Background Image */}
+            <div
+                style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundImage: 'url(https://images.unsplash.com/photo-1595974482597-4b8da8879bc5?w=1200&q=80)',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    opacity: 0.15,
+                    zIndex: 0,
+                }}
+            />
+
+            <div
+                className="scale-in"
+                style={{
+                    position: 'relative',
+                    zIndex: 1,
+                    maxWidth: '450px',
+                    width: '100%',
+                    background: 'rgba(255, 255, 255, 0.92)',
+                    backdropFilter: 'blur(20px)',
+                    border: '1px solid rgba(255, 255, 255, 0.5)',
+                    borderRadius: 'var(--radius-2xl)',
+                    boxShadow: 'var(--shadow-3d)',
+                    padding: 'var(--spacing-8) var(--spacing-6)',
+                }}
+            >
+                {/* Logo & Header */}
+                <div style={{ textAlign: 'center', marginBottom: 'var(--spacing-8)' }}>
+                    <div
+                        style={{
+                            width: '60px',
+                            height: '60px',
+                            margin: '0 auto var(--spacing-4)',
+                            borderRadius: '50%',
+                            background: 'var(--gradient-primary)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            boxShadow: 'var(--shadow-glow-green)',
+                        }}
+                    >
+                        <FaTractor style={{ color: 'white', fontSize: '1.8rem' }} />
+                    </div>
+                    <h2
+                        style={{
+                            fontSize: 'var(--font-size-2xl)',
+                            fontWeight: 800,
+                            color: 'var(--gray-900)',
+                            marginBottom: 'var(--spacing-2)',
+                        }}
+                    >
+                        {t('auth.loginTitle')}
                     </h2>
-                    <p style={{
-                        color: 'var(--gray-600)',
-                        fontSize: 'var(--font-size-sm)',
-                    }}>
-                        Login to your AgriConnect account
+                    <p style={{ color: 'var(--gray-600)', fontSize: 'var(--font-size-sm)' }}>
+                        {t('auth.loginSubtitle')}
                     </p>
                 </div>
 
                 {/* Email/Password Form */}
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }}>
                     {/* Email */}
-                    <div style={{ marginBottom: 'var(--spacing-4)' }}>
-                        <label style={{
-                            display: 'block',
-                            fontSize: 'var(--font-size-sm)',
-                            fontWeight: 500,
-                            color: 'var(--gray-700)',
-                            marginBottom: 'var(--spacing-2)',
-                        }}>
-                            Email Address
-                        </label>
-                        <input
-                            type="email"
-                            name="email"
-                            placeholder="youremail@example.com"
-                            value={formData.email}
-                            onChange={handleChange}
-                            required
+                    <div>
+                        <label
                             style={{
-                                width: '100%',
-                                padding: 'var(--spacing-3)',
+                                display: 'block',
                                 fontSize: 'var(--font-size-sm)',
-                                border: '1px solid var(--gray-300)',
-                                borderRadius: 'var(--radius-md)',
-                                outline: 'none',
-                                background: 'var(--gray-50)',
-                                transition: 'all 0.2s',
+                                fontWeight: 600,
+                                color: 'var(--gray-700)',
+                                marginBottom: 'var(--spacing-2)',
                             }}
-                            onFocus={(e) => {
-                                e.target.style.borderColor = '#10b981';
-                                e.target.style.background = 'white';
-                            }}
-                            onBlur={(e) => {
-                                e.target.style.borderColor = 'var(--gray-300)';
-                                e.target.style.background = 'var(--gray-50)';
-                            }}
-                        />
+                        >
+                            {t('auth.email')}
+                        </label>
+                        <div style={{ position: 'relative' }}>
+                            <FaEnvelope
+                                style={{
+                                    position: 'absolute',
+                                    left: '14px',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    color: 'var(--gray-400)',
+                                }}
+                            />
+                            <input
+                                type="email"
+                                name="email"
+                                placeholder="name@example.com"
+                                value={formData.email}
+                                onChange={handleChange}
+                                required
+                                style={{
+                                    width: '100%',
+                                    padding: 'var(--spacing-3) var(--spacing-3) var(--spacing-3) 40px',
+                                    fontSize: 'var(--font-size-sm)',
+                                    border: '1.5px solid var(--gray-200)',
+                                    borderRadius: 'var(--radius-lg)',
+                                    outline: 'none',
+                                    background: 'var(--white)',
+                                    transition: 'all 0.2s ease',
+                                }}
+                                onFocus={(e) => {
+                                    e.target.style.borderColor = 'var(--primary-green)';
+                                    e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.15)';
+                                }}
+                                onBlur={(e) => {
+                                    e.target.style.borderColor = 'var(--gray-200)';
+                                    e.target.style.boxShadow = 'none';
+                                }}
+                            />
+                        </div>
                     </div>
 
                     {/* Password */}
-                    <div style={{ marginBottom: 'var(--spacing-5)' }}>
-                        <label style={{
-                            display: 'block',
-                            fontSize: 'var(--font-size-sm)',
-                            fontWeight: 500,
-                            color: 'var(--gray-700)',
-                            marginBottom: 'var(--spacing-2)',
-                        }}>
-                            Password
+                    <div>
+                        <label
+                            style={{
+                                display: 'block',
+                                fontSize: 'var(--font-size-sm)',
+                                fontWeight: 600,
+                                color: 'var(--gray-700)',
+                                marginBottom: 'var(--spacing-2)',
+                            }}
+                        >
+                            {t('auth.password')}
                         </label>
                         <div style={{ position: 'relative' }}>
+                            <FaLock
+                                style={{
+                                    position: 'absolute',
+                                    left: '14px',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    color: 'var(--gray-400)',
+                                }}
+                            />
                             <input
                                 type={showPassword ? 'text' : 'password'}
                                 name="password"
@@ -134,22 +198,21 @@ const Login = () => {
                                 required
                                 style={{
                                     width: '100%',
-                                    padding: 'var(--spacing-3)',
-                                    paddingRight: '40px',
+                                    padding: 'var(--spacing-3) 44px var(--spacing-3) 40px',
                                     fontSize: 'var(--font-size-sm)',
-                                    border: '1px solid var(--gray-300)',
-                                    borderRadius: 'var(--radius-md)',
+                                    border: '1.5px solid var(--gray-200)',
+                                    borderRadius: 'var(--radius-lg)',
                                     outline: 'none',
-                                    background: 'var(--gray-50)',
-                                    transition: 'all 0.2s',
+                                    background: 'var(--white)',
+                                    transition: 'all 0.2s ease',
                                 }}
                                 onFocus={(e) => {
-                                    e.target.style.borderColor = '#10b981';
-                                    e.target.style.background = 'white';
+                                    e.target.style.borderColor = 'var(--primary-green)';
+                                    e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.15)';
                                 }}
                                 onBlur={(e) => {
-                                    e.target.style.borderColor = 'var(--gray-300)';
-                                    e.target.style.background = 'var(--gray-50)';
+                                    e.target.style.borderColor = 'var(--gray-200)';
+                                    e.target.style.boxShadow = 'none';
                                 }}
                             />
                             <button
@@ -163,8 +226,11 @@ const Login = () => {
                                     background: 'none',
                                     border: 'none',
                                     cursor: 'pointer',
-                                    color: 'var(--gray-500)',
+                                    color: 'var(--gray-400)',
                                     padding: '4px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
                                 }}
                             >
                                 {showPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
@@ -175,11 +241,15 @@ const Login = () => {
                                 to="/forgot-password"
                                 style={{
                                     color: 'var(--primary-green)',
-                                    fontSize: 'var(--font-size-sm)',
+                                    fontSize: 'var(--font-size-xs)',
+                                    fontWeight: 600,
                                     textDecoration: 'none',
+                                    transition: 'color 0.2s',
                                 }}
+                                onMouseOver={(e) => e.target.style.color = 'var(--primary-green-dark)'}
+                                onMouseOut={(e) => e.target.style.color = 'var(--primary-green)'}
                             >
-                                Forgot Password?
+                                {t('auth.forgotPassword')}
                             </Link>
                         </div>
                     </div>
@@ -188,46 +258,42 @@ const Login = () => {
                     <button
                         type="submit"
                         disabled={loading}
+                        className="ripple"
                         style={{
                             width: '100%',
                             padding: 'var(--spacing-3)',
-                            background: loading ? 'var(--gray-400)' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                            background: loading ? 'var(--gray-400)' : 'var(--gradient-primary)',
                             color: 'white',
                             border: 'none',
-                            borderRadius: 'var(--radius-md)',
-                            fontSize: 'var(--font-size-sm)',
-                            fontWeight: 600,
+                            borderRadius: 'var(--radius-lg)',
+                            fontSize: 'var(--font-size-base)',
+                            fontWeight: 700,
                             cursor: loading ? 'not-allowed' : 'pointer',
-                            transition: 'all 0.2s',
-                        }}
-                        onMouseOver={(e) => {
-                            if (!loading) {
-                                e.target.style.transform = 'translateY(-1px)';
-                                e.target.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)';
-                            }
-                        }}
-                        onMouseOut={(e) => {
-                            e.target.style.transform = 'translateY(0)';
-                            e.target.style.boxShadow = 'none';
+                            boxShadow: loading ? 'none' : '0 4px 12px rgba(16, 185, 129, 0.2)',
+                            transition: 'all 0.2s ease',
+                            marginTop: 'var(--spacing-2)',
                         }}
                     >
-                        {loading ? 'Logging in...' : 'Login'}
+                        {loading ? t('auth.signingIn') : t('nav.login')}
                     </button>
                 </form>
 
                 {/* Register Link */}
-                <div style={{ textAlign: 'center', marginTop: 'var(--spacing-6)' }}>
-                    <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--gray-600)' }}>
-                        Don't have an account?{' '}
+                <div style={{ textAlign: 'center', marginTop: 'var(--spacing-6)', borderTop: '1px solid var(--gray-200)', paddingTop: 'var(--spacing-4)' }}>
+                    <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--gray-600)', margin: 0 }}>
+                        {t('auth.noAccount')}{' '}
                         <Link
                             to="/register"
                             style={{
-                                color: '#10b981',
-                                fontWeight: 600,
+                                color: 'var(--primary-green)',
+                                fontWeight: 700,
                                 textDecoration: 'none',
+                                transition: 'color 0.2s',
                             }}
+                            onMouseOver={(e) => e.target.style.color = 'var(--primary-green-dark)'}
+                            onMouseOut={(e) => e.target.style.color = 'var(--primary-green)'}
                         >
-                            Register here
+                            {t('auth.signUp')}
                         </Link>
                     </p>
                 </div>

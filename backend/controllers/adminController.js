@@ -2,6 +2,8 @@ import User from '../models/User.js';
 import Crop from '../models/Crop.js';
 import Order from '../models/Order.js';
 import Negotiation from '../models/Negotiation.js';
+import mongoose from 'mongoose';
+import { localUsers } from '../utils/localData.js';
 
 // @desc    Get all users
 // @route   GET /api/admin/users
@@ -32,19 +34,81 @@ export const getAllUsers = async (req, res) => {
 // @access  Private (Admin only)
 export const verifyUser = async (req, res) => {
     try {
+        const { isVerified, rejectionReason } = req.body;
+        const targetVerified = isVerified !== undefined ? isVerified : true;
+
+        if (mongoose.connection.readyState !== 1 || !/^[0-9a-fA-F]{24}$/.test(req.params.id)) {
+            const user = localUsers.find(u => String(u._id) === String(req.params.id));
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+            user.isVerified = targetVerified;
+            if (rejectionReason) {
+                user.rejectionReason = rejectionReason;
+            }
+            return res.json({
+                success: true,
+                data: user,
+            });
+        }
+
         const user = await User.findById(req.params.id);
 
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        user.isVerified = true;
+        user.isVerified = targetVerified;
+        if (rejectionReason) {
+            user.rejectionReason = rejectionReason;
+        }
 
         await user.save();
 
         res.json({
             success: true,
             data: user,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+// @desc    Get user verification requests
+// @route   GET /api/admin/verification-requests
+// @access  Private (Admin only)
+export const getVerificationRequests = async (req, res) => {
+    try {
+        const { status } = req.query;
+        let query = {
+            role: { $in: ['farmer', 'wholesaler'] }
+        };
+
+        if (status === 'verified') {
+            query.isVerified = true;
+        } else {
+            query.isVerified = false;
+        }
+
+        if (mongoose.connection.readyState !== 1) {
+            const users = localUsers.filter(u => 
+                ['farmer', 'wholesaler'].includes(u.role) && 
+                u.isVerified === (status === 'verified')
+            );
+            return res.json({
+                success: true,
+                count: users.length,
+                data: users
+            });
+        }
+
+        const users = await User.find(query).select('-password').sort({ createdAt: -1 });
+
+        res.json({
+            success: true,
+            count: users.length,
+            data: users,
         });
     } catch (error) {
         console.error(error);

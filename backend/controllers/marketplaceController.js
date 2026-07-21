@@ -1,5 +1,7 @@
 import Order from '../models/Order.js';
 import Crop from '../models/Crop.js';
+import mongoose from 'mongoose';
+import { filterLocalCrops, findLocalCropById, createLocalOrder, findLocalOrdersByBuyer, findLocalOrderById, updateLocalCropStock } from '../utils/localData.js';
 
 // @desc    Get marketplace crops (available for consumers)
 // @route   GET /api/marketplace/crops
@@ -33,6 +35,15 @@ export const getMarketplaceCrops = async (req, res) => {
         if (sort === 'price_high') sortOption = { consumerPrice: -1 };
         if (sort === 'popular') sortOption = { views: -1 };
 
+        if (mongoose.connection.readyState !== 1) {
+            const fallback = filterLocalCrops({ ...req.query, status: 'approved' });
+            return res.json({
+                success: true,
+                count: fallback.data.length,
+                data: fallback.data,
+            });
+        }
+
         const crops = await Crop.find(query)
             .populate('farmer', 'name phone region rating')
             .sort(sortOption);
@@ -53,6 +64,15 @@ export const getMarketplaceCrops = async (req, res) => {
 // @access  Public
 export const getMarketplaceCrop = async (req, res) => {
     try {
+        if (mongoose.connection.readyState !== 1) {
+            const localCrop = findLocalCropById(req.params.id);
+            if (!localCrop) {
+                return res.status(404).json({ message: 'Crop not found' });
+            }
+
+            return res.json({ success: true, data: localCrop });
+        }
+
         const crop = await Crop.findById(req.params.id).populate(
             'farmer',
             'name email phone address region rating isVerified'
@@ -93,6 +113,54 @@ export const placeConsumerOrder = async (req, res) => {
 
         let totalAmount = 0;
         const orderItems = [];
+
+        if (mongoose.connection.readyState !== 1) {
+            for (const item of items) {
+                const crop = findLocalCropById(item.cropId);
+
+                if (!crop || !crop.availableForConsumers) {
+                    return res.status(400).json({ message: `Crop ${item.cropId} not available` });
+                }
+
+                if ((crop.stockQuantity || 0) < item.quantity) {
+                    return res.status(400).json({
+                        message: `Insufficient stock for ${crop.name}. Available: ${crop.stockQuantity}`
+                    });
+                }
+
+                const itemPrice = crop.consumerPrice || crop.expectedPrice || 0;
+                const itemTotal = itemPrice * item.quantity;
+                totalAmount += itemTotal;
+
+                orderItems.push({
+                    crop: crop,
+                    farmer: crop.farmer,
+                    quantity: item.quantity,
+                    price: itemPrice,
+                    total: itemTotal,
+                });
+
+                updateLocalCropStock(crop._id, item.quantity);
+            }
+
+            const localOrder = createLocalOrder({
+                orderNumber: `ORD-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 7)}`.toUpperCase(),
+                buyer: req.user,
+                buyerType: 'consumer',
+                items: orderItems,
+                totalAmount,
+                deliveryAddress,
+                paymentMethod: paymentMethod || 'cod',
+                paymentStatus: /(cod|cash)/i.test(paymentMethod || 'cod') ? 'pending' : 'paid',
+                orderStatus: 'placed',
+                orderType: 'consumer',
+            });
+
+            return res.status(201).json({
+                success: true,
+                data: localOrder,
+            });
+        }
 
         // Validate and calculate total
         for (const item of items) {
@@ -171,6 +239,15 @@ export const placeConsumerOrder = async (req, res) => {
 // @access  Private (Consumer)
 export const getConsumerOrders = async (req, res) => {
     try {
+        if (mongoose.connection.readyState !== 1) {
+            const orders = findLocalOrdersByBuyer(req.user._id);
+            return res.json({
+                success: true,
+                count: orders.length,
+                data: orders,
+            });
+        }
+
         const orders = await Order.find({
             buyer: req.user._id,
             orderType: 'consumer',
@@ -201,6 +278,16 @@ export const getConsumerOrders = async (req, res) => {
 // @access  Private
 export const trackOrder = async (req, res) => {
     try {
+        if (mongoose.connection.readyState !== 1) {
+            const order = findLocalOrderById(req.params.id);
+
+            if (!order) {
+                return res.status(404).json({ message: 'Order not found' });
+            }
+
+            return res.json({ success: true, data: order });
+        }
+
         const order = await Order.findById(req.params.id)
             .populate('buyer', 'name email phone')
             .populate({
@@ -283,6 +370,39 @@ export const getFarmerConsumerOrders = async (req, res) => {
     try {
         const { status, search } = req.query;
 
+        if (mongoose.connection.readyState !== 1 || !/^[0-9a-fA-F]{24}$/.test(req.user._id)) {
+            let myOrders = localOrders.filter(o => 
+                o.orderType === 'consumer' && 
+                o.items.some(item => String(item.farmer?._id || item.farmer) === String(req.user._id))
+            );
+            if (status && status !== 'all') {
+                myOrders = myOrders.filter(o => o.orderStatus === status);
+            }
+            if (search) {
+                const needle = search.toLowerCase();
+                myOrders = myOrders.filter(o => 
+                    o.orderNumber.toLowerCase().includes(needle) || 
+                    (o.buyer?.name || '').toLowerCase().includes(needle)
+                );
+            }
+            // Normalize farmerTotal for local response
+            myOrders = myOrders.map(order => {
+                const farmerItems = order.items.filter(
+                    item => String(item.farmer?._id || item.farmer) === String(req.user._id)
+                );
+                return {
+                    ...order,
+                    items: farmerItems,
+                    farmerTotal: farmerItems.reduce((sum, item) => sum + item.total, 0),
+                };
+            });
+            return res.json({
+                success: true,
+                count: myOrders.length,
+                data: myOrders
+            });
+        }
+
         // Build query to find orders containing farmer's crops
         let query = {
             orderType: 'consumer',
@@ -347,6 +467,31 @@ export const getFarmerConsumerOrders = async (req, res) => {
 export const updateConsumerOrderStatus = async (req, res) => {
     try {
         const { status, notes } = req.body;
+
+        if (mongoose.connection.readyState !== 1 || !/^[0-9a-fA-F]{24}$/.test(req.params.id)) {
+            const order = findLocalOrderById(req.params.id);
+            if (!order) {
+                return res.status(404).json({ message: 'Order not found' });
+            }
+            order.orderStatus = status;
+            order.statusHistory = order.statusHistory || [];
+            order.statusHistory.push({
+                status,
+                timestamp: Date.now(),
+                notes: notes || `Order ${status} by farmer`,
+            });
+            if (status === 'confirmed') order.confirmedAt = Date.now();
+            if (status === 'shipped') order.shippedAt = Date.now();
+            if (status === 'delivered') {
+                order.deliveredAt = Date.now();
+                order.paymentStatus = 'paid';
+            }
+            return res.json({
+                success: true,
+                data: order,
+            });
+        }
+
         const order = await Order.findById(req.params.id);
 
         if (!order) {
@@ -411,6 +556,33 @@ export const updateConsumerOrderStatus = async (req, res) => {
 export const addTrackingInfo = async (req, res) => {
     try {
         const { courierName, trackingNumber, estimatedDelivery } = req.body;
+
+        if (mongoose.connection.readyState !== 1 || !/^[0-9a-fA-F]{24}$/.test(req.params.id)) {
+            const order = findLocalOrderById(req.params.id);
+            if (!order) {
+                return res.status(404).json({ message: 'Order not found' });
+            }
+            order.trackingInfo = {
+                courierName,
+                trackingNumber,
+                estimatedDelivery: estimatedDelivery ? new Date(estimatedDelivery) : undefined,
+            };
+            if (order.orderStatus === 'packed' || order.orderStatus === 'processing') {
+                order.orderStatus = 'shipped';
+                order.shippedAt = Date.now();
+                order.statusHistory = order.statusHistory || [];
+                order.statusHistory.push({
+                    status: 'shipped',
+                    timestamp: Date.now(),
+                    notes: `Shipped via ${courierName}`,
+                });
+            }
+            return res.json({
+                success: true,
+                data: order,
+            });
+        }
+
         const order = await Order.findById(req.params.id);
 
         if (!order) {
@@ -473,6 +645,31 @@ export const addTrackingInfo = async (req, res) => {
 export const cancelConsumerOrder = async (req, res) => {
     try {
         const { reason } = req.body;
+
+        if (mongoose.connection.readyState !== 1 || !/^[0-9a-fA-F]{24}$/.test(req.params.id)) {
+            const order = findLocalOrderById(req.params.id);
+            if (!order) {
+                return res.status(404).json({ message: 'Order not found' });
+            }
+            if (String(order.buyer?._id || order.buyer) !== String(req.user._id)) {
+                return res.status(403).json({ message: 'Not authorized to cancel this order' });
+            }
+            order.orderStatus = 'cancelled';
+            order.cancelledAt = Date.now();
+            order.cancellationReason = reason || 'Cancelled by user';
+            order.statusHistory = order.statusHistory || [];
+            order.statusHistory.push({
+                status: 'cancelled',
+                timestamp: Date.now(),
+                notes: order.cancellationReason
+            });
+            return res.json({
+                success: true,
+                message: 'Order cancelled successfully',
+                data: order
+            });
+        }
+
         const order = await Order.findById(req.params.id);
 
         if (!order) {

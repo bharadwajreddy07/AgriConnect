@@ -1,5 +1,7 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import { findLocalUserById } from '../utils/localData.js';
+import mongoose from 'mongoose';
 
 // Protect routes - verify JWT token
 export const protect = async (req, res, next) => {
@@ -17,6 +19,17 @@ export const protect = async (req, res, next) => {
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
             // Get user from token
+            const localUser = findLocalUserById(decoded.id);
+
+            if (localUser) {
+                req.user = { ...localUser };
+                return next();
+            }
+
+            if (mongoose.connection.readyState !== 1) {
+                return res.status(401).json({ message: 'Not authorized, token failed' });
+            }
+
             req.user = await User.findById(decoded.id).select('-password');
 
             if (!req.user) {

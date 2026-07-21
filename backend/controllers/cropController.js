@@ -1,4 +1,6 @@
 import Crop from '../models/Crop.js';
+import mongoose from 'mongoose';
+import { filterLocalCrops, findLocalCropById, localCrops } from '../utils/localData.js';
 
 // @desc    Create a new crop listing
 // @route   POST /api/crops
@@ -18,6 +20,43 @@ export const createCrop = async (req, res) => {
             if (req.files.videos) {
                 cropData.videos = req.files.videos.map((file) => file.path);
             }
+        }
+
+        if (mongoose.connection.readyState !== 1 || !/^[0-9a-fA-F]{24}$/.test(req.user._id)) {
+            const localCrop = {
+                _id: `crop-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+                farmer: {
+                    _id: req.user._id,
+                    name: req.user.name,
+                    phone: req.user.phone,
+                    region: req.user.region,
+                    rating: req.user.rating || { average: 5, count: 1 }
+                },
+                name: cropData.name,
+                category: cropData.category,
+                season: cropData.season,
+                quantity: cropData.quantity || { value: 10, unit: 'kg' },
+                expectedPrice: cropData.expectedPrice,
+                priceUnit: cropData.priceUnit || 'per kg',
+                isNegotiable: cropData.isNegotiable !== undefined ? cropData.isNegotiable : true,
+                location: cropData.location || { state: 'AP', district: 'Guntur' },
+                description: cropData.description || '',
+                qualityGrade: cropData.qualityGrade || 'Standard',
+                organicCertified: cropData.organicCertified === 'true' || cropData.organicCertified === true,
+                availableForConsumers: cropData.availableForConsumers === 'true' || cropData.availableForConsumers === true,
+                consumerPrice: cropData.consumerPrice || cropData.expectedPrice,
+                stockQuantity: cropData.stockQuantity || cropData.quantity?.value || 10,
+                images: cropData.images || ['/images/crops/potatoes.png'],
+                status: 'approved',
+                views: 0,
+                createdAt: new Date().toISOString(),
+            };
+            localCrops.unshift(localCrop);
+
+            return res.status(201).json({
+                success: true,
+                data: localCrop,
+            });
         }
 
         const crop = await Crop.create(cropData);
@@ -101,6 +140,10 @@ export const getCrops = async (req, res) => {
             }
         }
 
+        if (mongoose.connection.readyState !== 1) {
+            return res.json(filterLocalCrops(req.query));
+        }
+
         const total = await Crop.countDocuments(query);
 
         const crops = await Crop.find(query)
@@ -129,6 +172,24 @@ export const getCrops = async (req, res) => {
 export const getMyCrops = async (req, res) => {
     try {
         const { category, season, status, search } = req.query;
+
+        if (mongoose.connection.readyState !== 1 || !/^[0-9a-fA-F]{24}$/.test(req.user._id)) {
+            let myCrops = localCrops.filter(
+                (c) => String(c.farmer?._id || c.farmer) === String(req.user._id)
+            );
+            if (category) myCrops = myCrops.filter(c => c.category === category);
+            if (season) myCrops = myCrops.filter(c => c.season === season);
+            if (status) myCrops = myCrops.filter(c => c.status === status);
+            if (search) {
+                const needle = search.toLowerCase();
+                myCrops = myCrops.filter(c => c.name.toLowerCase().includes(needle) || (c.description || '').toLowerCase().includes(needle));
+            }
+            return res.json({
+                success: true,
+                count: myCrops.length,
+                data: myCrops,
+            });
+        }
 
         let query = { farmer: req.user._id };
 
@@ -160,6 +221,15 @@ export const getMyCrops = async (req, res) => {
 // @access  Public
 export const getCropById = async (req, res) => {
     try {
+        if (mongoose.connection.readyState !== 1 || !/^[0-9a-fA-F]{24}$/.test(req.params.id)) {
+            const localCrop = findLocalCropById(req.params.id);
+            if (!localCrop) {
+                return res.status(404).json({ message: 'Crop not found' });
+            }
+
+            return res.json({ success: true, data: localCrop });
+        }
+
         const crop = await Crop.findById(req.params.id).populate(
             'farmer',
             'name email phone address region rating isVerified'
@@ -188,6 +258,39 @@ export const getCropById = async (req, res) => {
 // @access  Private (Farmer - own crops only)
 export const updateCrop = async (req, res) => {
     try {
+        if (mongoose.connection.readyState !== 1 || !/^[0-9a-fA-F]{24}$/.test(req.params.id)) {
+            const cropIndex = localCrops.findIndex(c => String(c._id) === String(req.params.id));
+            if (cropIndex === -1) {
+                return res.status(404).json({ message: 'Crop not found' });
+            }
+            const crop = localCrops[cropIndex];
+            if (String(crop.farmer?._id || crop.farmer) !== String(req.user._id)) {
+                return res.status(403).json({ message: 'Not authorized to update this crop' });
+            }
+
+            // Handle uploaded files
+            if (req.files) {
+                if (req.files.images) {
+                    req.body.images = req.files.images.map((file) => file.path);
+                }
+                if (req.files.videos) {
+                    req.body.videos = req.files.videos.map((file) => file.path);
+                }
+            }
+
+            const updatedCrop = {
+                ...crop,
+                ...req.body,
+                updatedAt: new Date().toISOString()
+            };
+            localCrops[cropIndex] = updatedCrop;
+
+            return res.json({
+                success: true,
+                data: updatedCrop
+            });
+        }
+
         let crop = await Crop.findById(req.params.id);
 
         if (!crop) {
@@ -229,6 +332,21 @@ export const updateCrop = async (req, res) => {
 // @access  Private (Farmer)
 export const updateCropStock = async (req, res) => {
     try {
+        if (mongoose.connection.readyState !== 1 || !/^[0-9a-fA-F]{24}$/.test(req.params.id)) {
+            const crop = localCrops.find(c => String(c._id) === String(req.params.id));
+            if (!crop) {
+                return res.status(404).json({ message: 'Crop not found' });
+            }
+            if (String(crop.farmer?._id || crop.farmer) !== String(req.user._id)) {
+                return res.status(403).json({ message: 'Not authorized' });
+            }
+            crop.stockQuantity = req.body.stockQuantity;
+            return res.json({
+                success: true,
+                data: crop
+            });
+        }
+
         const crop = await Crop.findById(req.params.id);
 
         if (!crop) {
@@ -257,6 +375,21 @@ export const updateCropStock = async (req, res) => {
 // @access  Private (Farmer)
 export const toggleConsumerAvailability = async (req, res) => {
     try {
+        if (mongoose.connection.readyState !== 1 || !/^[0-9a-fA-F]{24}$/.test(req.params.id)) {
+            const crop = localCrops.find(c => String(c._id) === String(req.params.id));
+            if (!crop) {
+                return res.status(404).json({ message: 'Crop not found' });
+            }
+            if (String(crop.farmer?._id || crop.farmer) !== String(req.user._id)) {
+                return res.status(403).json({ message: 'Not authorized' });
+            }
+            crop.availableForConsumers = req.body.availableForConsumers;
+            return res.json({
+                success: true,
+                data: crop
+            });
+        }
+
         const crop = await Crop.findById(req.params.id);
 
         if (!crop) {
@@ -291,6 +424,26 @@ export const bulkDeleteCrops = async (req, res) => {
             return res.status(400).json({ message: 'No crop IDs provided' });
         }
 
+        if (mongoose.connection.readyState !== 1 || cropIds.some(id => !/^[0-9a-fA-F]{24}$/.test(id))) {
+            const cropList = localCrops.filter(c => cropIds.includes(String(c._id)));
+            const unauthorized = cropList.some(
+                c => String(c.farmer?._id || c.farmer) !== String(req.user._id)
+            );
+            if (unauthorized) {
+                return res.status(403).json({ message: 'Not authorized to delete some crops' });
+            }
+            for (const id of cropIds) {
+                const index = localCrops.findIndex(c => String(c._id) === String(id));
+                if (index !== -1) {
+                    localCrops.splice(index, 1);
+                }
+            }
+            return res.json({
+                success: true,
+                message: `${cropIds.length} crops deleted successfully`,
+            });
+        }
+
         // Verify all crops belong to the farmer
         const crops = await Crop.find({ _id: { $in: cropIds } });
         const unauthorized = crops.some(
@@ -318,6 +471,22 @@ export const bulkDeleteCrops = async (req, res) => {
 // @access  Private (Farmer - own crops only)
 export const deleteCrop = async (req, res) => {
     try {
+        if (mongoose.connection.readyState !== 1 || !/^[0-9a-fA-F]{24}$/.test(req.params.id)) {
+            const index = localCrops.findIndex(c => String(c._id) === String(req.params.id));
+            if (index === -1) {
+                return res.status(404).json({ message: 'Crop not found' });
+            }
+            const crop = localCrops[index];
+            if (String(crop.farmer?._id || crop.farmer) !== String(req.user._id)) {
+                return res.status(403).json({ message: 'Not authorized to delete this crop' });
+            }
+            localCrops.splice(index, 1);
+            return res.json({
+                success: true,
+                message: 'Crop deleted successfully',
+            });
+        }
+
         const crop = await Crop.findById(req.params.id);
 
         if (!crop) {
@@ -346,6 +515,17 @@ export const deleteCrop = async (req, res) => {
 // @access  Public
 export const getFarmerCrops = async (req, res) => {
     try {
+        if (mongoose.connection.readyState !== 1 || !/^[0-9a-fA-F]{24}$/.test(req.params.farmerId)) {
+            const crops = localCrops.filter(
+                (c) => String(c.farmer?._id || c.farmer) === String(req.params.farmerId)
+            );
+            return res.json({
+                success: true,
+                count: crops.length,
+                data: crops,
+            });
+        }
+
         const crops = await Crop.find({ farmer: req.params.farmerId }).sort({
             createdAt: -1,
         });
@@ -366,6 +546,18 @@ export const getFarmerCrops = async (req, res) => {
 // @access  Private (Admin only)
 export const approveCrop = async (req, res) => {
     try {
+        if (mongoose.connection.readyState !== 1) {
+            const crop = localCrops.find(c => String(c._id) === String(req.params.id));
+            if (!crop) {
+                return res.status(404).json({ message: 'Crop not found' });
+            }
+            crop.status = req.body.status || 'approved';
+            return res.json({
+                success: true,
+                data: crop,
+            });
+        }
+
         const crop = await Crop.findById(req.params.id);
 
         if (!crop) {
@@ -391,7 +583,14 @@ export const approveCrop = async (req, res) => {
 // @access  Private (Farmer)
 export const exportCropsToCSV = async (req, res) => {
     try {
-        const crops = await Crop.find({ farmer: req.user._id }).sort({ createdAt: -1 });
+        let crops = [];
+        if (mongoose.connection.readyState !== 1) {
+            crops = localCrops.filter(
+                (c) => String(c.farmer?._id || c.farmer) === String(req.user._id)
+            );
+        } else {
+            crops = await Crop.find({ farmer: req.user._id }).sort({ createdAt: -1 });
+        }
 
         if (crops.length === 0) {
             return res.status(404).json({ message: 'No crops to export' });

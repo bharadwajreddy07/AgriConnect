@@ -3,6 +3,8 @@ import Negotiation from '../models/Negotiation.js';
 import Crop from '../models/Crop.js';
 import fs from 'fs';
 import path from 'path';
+import mongoose from 'mongoose';
+import { localOrders } from '../utils/localData.js';
 
 const logError = (error, context) => {
     const logPath = path.join(process.cwd(), 'order-errors.log');
@@ -179,6 +181,18 @@ export const createOrder = async (req, res) => {
 // @access  Private
 export const getOrders = async (req, res) => {
     try {
+        if (mongoose.connection.readyState !== 1 || !/^[0-9a-fA-F]{24}$/.test(req.user._id)) {
+            const userOrders = localOrders.filter(o => 
+                (req.user.role === 'wholesaler' && String(o.wholesaler?._id || o.wholesaler || o.buyer?._id || o.buyer) === String(req.user._id)) ||
+                (req.user.role === 'farmer' && String(o.farmer?._id || o.farmer || o.seller?._id || o.seller) === String(req.user._id))
+            );
+            return res.json({
+                success: true,
+                count: userOrders.length,
+                data: userOrders,
+            });
+        }
+
         let query = {};
 
         if (req.user.role === 'wholesaler') {
@@ -209,6 +223,23 @@ export const getOrders = async (req, res) => {
 // @access  Private
 export const getOrder = async (req, res) => {
     try {
+        if (mongoose.connection.readyState !== 1 || !/^[0-9a-fA-F]{24}$/.test(req.params.id) || !/^[0-9a-fA-F]{24}$/.test(req.user._id)) {
+            const order = localOrders.find(o => String(o._id) === String(req.params.id));
+            if (!order) {
+                return res.status(404).json({ message: 'Order not found' });
+            }
+            const isWholesaler = String(order.wholesaler?._id || order.wholesaler || order.buyer?._id || order.buyer) === String(req.user._id);
+            const isFarmer = String(order.farmer?._id || order.farmer || order.seller?._id || order.seller) === String(req.user._id);
+
+            if (!isWholesaler && !isFarmer && req.user.role !== 'admin') {
+                return res.status(403).json({ message: 'Not authorized' });
+            }
+            return res.json({
+                success: true,
+                data: order,
+            });
+        }
+
         const order = await WholesaleOrder.findById(req.params.id)
             .populate('wholesaler', 'name email phone address')
             .populate('farmer', 'name email phone address')
@@ -243,6 +274,19 @@ export const getOrder = async (req, res) => {
 export const updateOrderStatus = async (req, res) => {
     try {
         const { status, note } = req.body;
+
+        if (mongoose.connection.readyState !== 1 || !/^[0-9a-fA-F]{24}$/.test(req.params.id)) {
+            const order = localOrders.find(o => String(o._id) === String(req.params.id));
+            if (!order) {
+                return res.status(404).json({ message: 'Order not found' });
+            }
+            order.orderStatus = status;
+            order.status = status;
+            return res.json({
+                success: true,
+                data: order,
+            });
+        }
 
         const order = await WholesaleOrder.findById(req.params.id);
 
@@ -292,6 +336,20 @@ export const updateOrderStatus = async (req, res) => {
 export const cancelOrder = async (req, res) => {
     try {
         const { reason } = req.body;
+
+        if (mongoose.connection.readyState !== 1 || !/^[0-9a-fA-F]{24}$/.test(req.params.id)) {
+            const order = localOrders.find(o => String(o._id) === String(req.params.id));
+            if (!order) {
+                return res.status(404).json({ message: 'Order not found' });
+            }
+            order.status = 'cancelled';
+            order.orderStatus = 'cancelled';
+            return res.json({
+                success: true,
+                message: 'Order cancelled successfully',
+                data: order,
+            });
+        }
 
         const order = await WholesaleOrder.findById(req.params.id);
 

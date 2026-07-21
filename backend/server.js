@@ -10,6 +10,14 @@ import fs from 'fs';
 import passport from 'passport';
 import session from 'express-session';
 import User from './models/User.js';
+import dns from 'dns';
+
+// Configure public DNS to resolve MongoDB Atlas SRV records
+try {
+    dns.setServers(['8.8.8.8', '8.8.4.4']);
+} catch (e) {
+    console.warn('DNS override failed:', e.message);
+}
 
 // Load environment variables
 dotenv.config();
@@ -254,7 +262,7 @@ app.use((req, res) => {
 });
 
 // Start server
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5006;
 
 httpServer.listen(PORT, () => {
     console.log(`
@@ -264,6 +272,16 @@ httpServer.listen(PORT, () => {
    Database: MongoDB           
    Socket.io: Enabled 
   `);
+});
+
+// Global error handlers to prevent crashes
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('⚠️ Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (error) => {
+    console.error('💥 Uncaught Exception:', error.message);
+    console.error(error.stack);
 });
 
 export default app;

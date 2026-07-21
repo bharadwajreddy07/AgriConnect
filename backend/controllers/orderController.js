@@ -1,6 +1,8 @@
 import Order from '../models/Order.js';
 import Crop from '../models/Crop.js';
 import Negotiation from '../models/Negotiation.js';
+import mongoose from 'mongoose';
+import { findLocalCropById, createLocalOrder, localOrders, findLocalOrdersByBuyer, findLocalOrderById } from '../utils/localData.js';
 
 // @desc    Place a new order
 // @route   POST /api/orders
@@ -8,6 +10,71 @@ import Negotiation from '../models/Negotiation.js';
 export const placeOrder = async (req, res) => {
     try {
         console.log('Request Body:', JSON.stringify(req.body, null, 2));
+
+        if (mongoose.connection.readyState !== 1 || !/^[0-9a-fA-F]{24}$/.test(req.user._id)) {
+            const { items, deliveryAddress, paymentMethod } = req.body;
+            const buyer = req.user._id;
+            const buyerType = req.user.role === 'wholesaler' ? 'wholesaler' : 'consumer';
+            
+            let orderItems = [];
+            if (items && Array.isArray(items)) {
+                orderItems = items;
+            } else {
+                orderItems = [{
+                    cropId: req.body.cropId,
+                    negotiationId: req.body.negotiationId,
+                    quantity: req.body.quantity,
+                    pricePerUnit: req.body.pricePerUnit
+                }];
+            }
+
+            const createdOrders = [];
+            for (const item of orderItems) {
+                const crop = findLocalCropById(item.cropId);
+                if (!crop) continue;
+
+                const finalPricePerUnit = item.pricePerUnit || crop.expectedPrice || 0;
+                const qtyValue = (item.quantity && typeof item.quantity === 'object') ? item.quantity.value : item.quantity;
+                const totalAmount = finalPricePerUnit * qtyValue;
+
+                const localOrder = createLocalOrder({
+                    buyer: req.user,
+                    buyerType,
+                    seller: crop.farmer,
+                    crop: crop,
+                    items: [{
+                        crop: crop,
+                        farmer: crop.farmer,
+                        quantity: qtyValue,
+                        price: finalPricePerUnit,
+                        total: totalAmount
+                    }],
+                    negotiation: item.negotiationId,
+                    quantity: { value: qtyValue, unit: crop.quantity?.unit || 'kg' },
+                    pricePerUnit: finalPricePerUnit,
+                    totalAmount,
+                    deliveryAddress,
+                    paymentMethod: paymentMethod || 'cod',
+                    paymentStatus: 'pending',
+                    orderStatus: 'placed',
+                    orderType: buyerType,
+                });
+
+                if (crop.quantity && crop.quantity.value >= qtyValue) {
+                    crop.quantity.value -= qtyValue;
+                    if (crop.quantity.value <= 0) {
+                        crop.status = 'sold';
+                    }
+                }
+                createdOrders.push(localOrder);
+            }
+            return res.status(201).json({
+                success: true,
+                count: createdOrders.length,
+                data: createdOrders
+            });
+        }
+
         const { items, deliveryAddress, paymentMethod } = req.body;
 
         // Determine buyer
@@ -148,6 +215,20 @@ export const placeOrder = async (req, res) => {
 // @access  Private
 export const getUserOrders = async (req, res) => {
     try {
+        if (mongoose.connection.readyState !== 1 || !/^[0-9a-fA-F]{24}$/.test(req.user._id)) {
+            let userOrders = [];
+            if (req.user.role === 'farmer') {
+                userOrders = localOrders.filter(o => String(o.seller?._id || o.seller) === String(req.user._id));
+            } else {
+                userOrders = localOrders.filter(o => String(o.buyer?._id || o.buyer) === String(req.user._id));
+            }
+            return res.json({
+                success: true,
+                count: userOrders.length,
+                data: userOrders,
+            });
+        }
+
         let query = {};
 
         if (req.user.role === 'farmer') {
@@ -158,7 +239,6 @@ export const getUserOrders = async (req, res) => {
 
         const orders = await Order.find(query)
             .populate('buyer', 'name phone email')
-            .populate('seller', 'name phone email')
             .populate('seller', 'name phone email')
             .populate('crop', 'name category season images')
             .populate({
@@ -183,6 +263,23 @@ export const getUserOrders = async (req, res) => {
 // @access  Private
 export const getOrderById = async (req, res) => {
     try {
+        if (mongoose.connection.readyState !== 1 || !/^[0-9a-fA-F]{24}$/.test(req.params.id) || !/^[0-9a-fA-F]{24}$/.test(req.user._id)) {
+            const order = findLocalOrderById(req.params.id);
+            if (!order) {
+                return res.status(404).json({ message: 'Order not found' });
+            }
+            const isBuyer = String(order.buyer?._id || order.buyer) === String(req.user._id);
+            const isSeller = String(order.seller?._id || order.seller) === String(req.user._id);
+            const isAdmin = req.user.role === 'admin';
+            if (!isBuyer && !isSeller && !isAdmin) {
+                return res.status(403).json({ message: 'Not authorized' });
+            }
+            return res.json({
+                success: true,
+                data: order,
+            });
+        }
+
         const order = await Order.findById(req.params.id)
             .populate('buyer', 'name phone email address')
             .populate('seller', 'name phone email address')
@@ -217,6 +314,33 @@ export const getOrderById = async (req, res) => {
 export const updateOrderStatus = async (req, res) => {
     try {
         const { status, notes } = req.body;
+
+        if (mongoose.connection.readyState !== 1) {
+            const order = findLocalOrderById(req.params.id);
+            if (!order) {
+                return res.status(404).json({ message: 'Order not found' });
+            }
+            const isSeller = String(order.seller?._id || order.seller) === String(req.user._id);
+            const isAdmin = req.user.role === 'admin';
+            if (!isSeller && !isAdmin) {
+                return res.status(403).json({ message: 'Not authorized' });
+            }
+            order.orderStatus = status;
+            order.statusHistory = order.statusHistory || [];
+            order.statusHistory.push({
+                status,
+                timestamp: new Date(),
+                notes,
+            });
+            if (status === 'confirmed') order.confirmedAt = new Date();
+            if (status === 'shipped') order.shippedAt = new Date();
+            if (status === 'delivered') order.deliveredAt = new Date();
+            if (status === 'cancelled') order.cancelledAt = new Date();
+            return res.json({
+                success: true,
+                data: order,
+            });
+        }
 
         const order = await Order.findById(req.params.id);
 
@@ -270,6 +394,26 @@ export const updateTracking = async (req, res) => {
     try {
         const { trackingInfo } = req.body;
 
+        if (mongoose.connection.readyState !== 1) {
+            const order = findLocalOrderById(req.params.id);
+            if (!order) {
+                return res.status(404).json({ message: 'Order not found' });
+            }
+            const isSeller = String(order.seller?._id || order.seller) === String(req.user._id);
+            const isAdmin = req.user.role === 'admin';
+            if (!isSeller && !isAdmin) {
+                return res.status(403).json({ message: 'Not authorized' });
+            }
+            order.trackingInfo = {
+                ...order.trackingInfo,
+                ...trackingInfo,
+            };
+            return res.json({
+                success: true,
+                data: order,
+            });
+        }
+
         const order = await Order.findById(req.params.id);
 
         if (!order) {
@@ -308,6 +452,18 @@ export const updatePaymentStatus = async (req, res) => {
     try {
         const { paymentStatus } = req.body;
 
+        if (mongoose.connection.readyState !== 1) {
+            const order = findLocalOrderById(req.params.id);
+            if (!order) {
+                return res.status(404).json({ message: 'Order not found' });
+            }
+            order.paymentStatus = paymentStatus;
+            return res.json({
+                success: true,
+                data: order,
+            });
+        }
+
         const order = await Order.findById(req.params.id);
 
         if (!order) {
@@ -334,6 +490,28 @@ export const updatePaymentStatus = async (req, res) => {
 export const addRating = async (req, res) => {
     try {
         const { value, review } = req.body;
+
+        if (mongoose.connection.readyState !== 1) {
+            const order = findLocalOrderById(req.params.id);
+            if (!order) {
+                return res.status(404).json({ message: 'Order not found' });
+            }
+            if (String(order.buyer?._id || order.buyer) !== String(req.user._id)) {
+                return res.status(403).json({ message: 'Not authorized' });
+            }
+            if (order.orderStatus !== 'delivered') {
+                return res.status(400).json({ message: 'Can only rate delivered orders' });
+            }
+            order.rating = {
+                value,
+                review,
+                timestamp: new Date(),
+            };
+            return res.json({
+                success: true,
+                data: order,
+            });
+        }
 
         const order = await Order.findById(req.params.id);
 

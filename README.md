@@ -93,6 +93,13 @@ npm run dev
 
 The frontend will run on `http://localhost:3000`
 
+### Deployment Notes
+
+- Deploy the frontend from `frontend/`.
+- Set `VITE_API_URL` to your backend URL.
+- Set `MONGODB_URI` in the backend environment.
+- If deploying from the repository root, set Vercel's root directory to `frontend`.
+
 ## 📁 Project Structure
 
 ```

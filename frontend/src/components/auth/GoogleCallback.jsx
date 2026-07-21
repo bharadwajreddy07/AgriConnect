@@ -25,7 +25,7 @@ const GoogleCallback = () => {
             localStorage.setItem('token', token);
 
             // Fetch user data
-            fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/me`, {
+            fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5006'}/api/auth/me`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }

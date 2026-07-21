@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { WholesalerCartProvider } from './context/WholesalerCartContext';
+import { I18nProvider } from './i18n/i18n';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -429,26 +430,28 @@ const AppRoutes = () => {
 
 function App() {
     return (
-        <Router>
-            <AuthProvider>
-                <WholesalerCartProvider>
-                    <CartProvider>
-                        <AppRoutes />
-                        <ToastContainer
-                            position="top-right"
-                            autoClose={3000}
-                            hideProgressBar={false}
-                            newestOnTop
-                            closeOnClick
-                            rtl={false}
-                            pauseOnFocusLoss
-                            draggable
-                            pauseOnHover
-                        />
-                    </CartProvider>
-                </WholesalerCartProvider>
-            </AuthProvider>
-        </Router>
+        <I18nProvider>
+            <Router>
+                <AuthProvider>
+                    <WholesalerCartProvider>
+                        <CartProvider>
+                            <AppRoutes />
+                            <ToastContainer
+                                position="top-right"
+                                autoClose={3000}
+                                hideProgressBar={false}
+                                newestOnTop
+                                closeOnClick
+                                rtl={false}
+                                pauseOnFocusLoss
+                                draggable
+                                pauseOnHover
+                            />
+                        </CartProvider>
+                    </WholesalerCartProvider>
+                </AuthProvider>
+            </Router>
+        </I18nProvider>
     );
 }
 

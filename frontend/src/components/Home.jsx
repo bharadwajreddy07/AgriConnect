@@ -1,7 +1,10 @@
 import { Link } from 'react-router-dom';
-import { FaTractor, FaWarehouse, FaShoppingCart, FaUserShield, FaLeaf, FaHandshake, FaChartLine, FaShieldAlt, FaCheckCircle, FaStar } from 'react-icons/fa';
+import { useI18n } from '../i18n/i18n';
+import { FaTractor, FaWarehouse, FaShoppingCart, FaUserShield, FaLeaf, FaHandshake, FaChartLine } from 'react-icons/fa';
 
 const Home = () => {
+    const { t } = useI18n();
+
     return (
         <div style={{ background: 'var(--white)' }}>
             {/* Hero Section with Real Image Background */}
@@ -57,14 +60,14 @@ const Home = () => {
                                     lineHeight: 1.1,
                                 }}
                             >
-                                Connecting Farms to Markets,
+                                {t('home.heroTitle')}
                                 <span style={{
                                     display: 'block',
                                     background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
                                     WebkitBackgroundClip: 'text',
                                     WebkitTextFillColor: 'transparent',
                                 }}>
-                                    Empowering Agriculture
+                                    {t('home.heroHighlight')}
                                 </span>
                             </h1>
                             <p style={{
@@ -73,7 +76,7 @@ const Home = () => {
                                 color: 'rgba(255, 255, 255, 0.95)',
                                 lineHeight: 1.6,
                             }}>
-                                Join India's fastest-growing agricultural marketplace. Fair prices, transparent deals, and direct connections between farmers, wholesalers, and consumers.
+                                {t('home.heroDescription')}
                             </p>
                             <div className="flex gap-4" style={{ flexWrap: 'wrap' }}>
                                 <Link
@@ -87,7 +90,7 @@ const Home = () => {
                                         boxShadow: '0 10px 30px rgba(245, 158, 11, 0.4)',
                                     }}
                                 >
-                                    Get Started Free →
+                                    {t('home.getStarted')}
                                 </Link>
                                 <Link
                                     to="/login"
@@ -102,7 +105,7 @@ const Home = () => {
                                         border: '2px solid rgba(255, 255, 255, 0.3)',
                                     }}
                                 >
-                                    Sign In
+                                    {t('home.signIn')}
                                 </Link>
                             </div>
                         </div>
@@ -115,140 +118,52 @@ const Home = () => {
                 <div className="container">
                     <div style={{ textAlign: 'center', marginBottom: 'var(--spacing-12)' }}>
                         <h2 className="gradient-text" style={{ fontSize: 'var(--font-size-4xl)', marginBottom: 'var(--spacing-3)' }}>
-                            Choose Your Role
+                            {t('home.chooseRole')}
                         </h2>
                         <p style={{ color: 'var(--gray-600)', fontSize: 'var(--font-size-lg)', maxWidth: '600px', margin: '0 auto' }}>
-                            Whether you're growing, buying, or selling - we've got you covered
+                            {t('home.chooseRoleDesc')}
                         </p>
                     </div>
 
                     <div className="grid grid-cols-4 gap-6">
                         {/* Farmer Card */}
-                        <div
-                            className="card-premium hover-3d"
-                            style={{
-                                textAlign: 'center',
-                                borderTop: '4px solid var(--emerald-500)',
-                            }}
-                        >
-                            <div
-                                style={{
-                                    width: '80px',
-                                    height: '80px',
-                                    margin: '0 auto var(--spacing-4)',
-                                    borderRadius: '50%',
-                                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    boxShadow: '0 10px 30px rgba(16, 185, 129, 0.3)',
-                                }}
-                            >
+                        <div className="card-premium hover-3d" style={{ textAlign: 'center', borderTop: '4px solid var(--emerald-500)' }}>
+                            <div style={{ width: '80px', height: '80px', margin: '0 auto var(--spacing-4)', borderRadius: '50%', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 30px rgba(16, 185, 129, 0.3)' }}>
                                 <FaTractor style={{ color: 'white', fontSize: '2.5rem' }} />
                             </div>
-                            <h3 style={{ marginBottom: 'var(--spacing-3)' }}>Farmer</h3>
-                            <p style={{ color: 'var(--gray-600)', marginBottom: 'var(--spacing-4)', fontSize: 'var(--font-size-sm)' }}>
-                                List crops, negotiate prices, sell directly to wholesalers and consumers
-                            </p>
-                            <Link to="/register" className="btn btn-primary" style={{ width: '100%' }}>
-                                Join as Farmer
-                            </Link>
+                            <h3 style={{ marginBottom: 'var(--spacing-3)' }}>{t('home.farmer')}</h3>
+                            <p style={{ color: 'var(--gray-600)', marginBottom: 'var(--spacing-4)', fontSize: 'var(--font-size-sm)' }}>{t('home.farmerDesc')}</p>
+                            <Link to="/register" className="btn btn-primary" style={{ width: '100%' }}>{t('home.joinAsFarmer')}</Link>
                         </div>
 
                         {/* Wholesaler Card */}
-                        <div
-                            className="card-premium hover-3d"
-                            style={{
-                                textAlign: 'center',
-                                borderTop: '4px solid var(--amber-500)',
-                            }}
-                        >
-                            <div
-                                style={{
-                                    width: '80px',
-                                    height: '80px',
-                                    margin: '0 auto var(--spacing-4)',
-                                    borderRadius: '50%',
-                                    background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    boxShadow: '0 10px 30px rgba(245, 158, 11, 0.3)',
-                                }}
-                            >
+                        <div className="card-premium hover-3d" style={{ textAlign: 'center', borderTop: '4px solid var(--amber-500)' }}>
+                            <div style={{ width: '80px', height: '80px', margin: '0 auto var(--spacing-4)', borderRadius: '50%', background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 30px rgba(245, 158, 11, 0.3)' }}>
                                 <FaWarehouse style={{ color: 'white', fontSize: '2.5rem' }} />
                             </div>
-                            <h3 style={{ marginBottom: 'var(--spacing-3)' }}>Wholesaler</h3>
-                            <p style={{ color: 'var(--gray-600)', marginBottom: 'var(--spacing-4)', fontSize: 'var(--font-size-sm)' }}>
-                                Browse crops, request samples, negotiate bulk orders
-                            </p>
-                            <Link to="/register" className="btn btn-secondary" style={{ width: '100%' }}>
-                                Join as Wholesaler
-                            </Link>
+                            <h3 style={{ marginBottom: 'var(--spacing-3)' }}>{t('home.wholesaler')}</h3>
+                            <p style={{ color: 'var(--gray-600)', marginBottom: 'var(--spacing-4)', fontSize: 'var(--font-size-sm)' }}>{t('home.wholesalerDesc')}</p>
+                            <Link to="/register" className="btn btn-secondary" style={{ width: '100%' }}>{t('home.joinAsWholesaler')}</Link>
                         </div>
 
                         {/* Consumer Card */}
-                        <div
-                            className="card-premium hover-3d"
-                            style={{
-                                textAlign: 'center',
-                                borderTop: '4px solid var(--sky-500)',
-                            }}
-                        >
-                            <div
-                                style={{
-                                    width: '80px',
-                                    height: '80px',
-                                    margin: '0 auto var(--spacing-4)',
-                                    borderRadius: '50%',
-                                    background: 'linear-gradient(135deg, #34d399 0%, #10b981 100%)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    boxShadow: '0 10px 30px rgba(16, 185, 129, 0.3)',
-                                }}
-                            >
+                        <div className="card-premium hover-3d" style={{ textAlign: 'center', borderTop: '4px solid var(--sky-500)' }}>
+                            <div style={{ width: '80px', height: '80px', margin: '0 auto var(--spacing-4)', borderRadius: '50%', background: 'linear-gradient(135deg, #34d399 0%, #10b981 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 30px rgba(16, 185, 129, 0.3)' }}>
                                 <FaShoppingCart style={{ color: 'white', fontSize: '2.5rem' }} />
                             </div>
-                            <h3 style={{ marginBottom: 'var(--spacing-3)' }}>Consumer</h3>
-                            <p style={{ color: 'var(--gray-600)', marginBottom: 'var(--spacing-4)', fontSize: 'var(--font-size-sm)' }}>
-                                Buy fresh produce directly from farmers at fair prices
-                            </p>
-                            <Link to="/register" className="btn btn-primary" style={{ width: '100%' }}>
-                                Shop Now
-                            </Link>
+                            <h3 style={{ marginBottom: 'var(--spacing-3)' }}>{t('home.consumer')}</h3>
+                            <p style={{ color: 'var(--gray-600)', marginBottom: 'var(--spacing-4)', fontSize: 'var(--font-size-sm)' }}>{t('home.consumerDesc')}</p>
+                            <Link to="/register" className="btn btn-primary" style={{ width: '100%' }}>{t('home.shopNow')}</Link>
                         </div>
 
                         {/* Admin Card */}
-                        <div
-                            className="card-premium hover-3d"
-                            style={{
-                                textAlign: 'center',
-                                borderTop: '4px solid var(--gray-700)',
-                            }}
-                        >
-                            <div
-                                style={{
-                                    width: '80px',
-                                    height: '80px',
-                                    margin: '0 auto var(--spacing-4)',
-                                    borderRadius: '50%',
-                                    background: 'linear-gradient(135deg, #374151 0%, #1f2937 100%)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    boxShadow: '0 10px 30px rgba(55, 65, 81, 0.3)',
-                                }}
-                            >
+                        <div className="card-premium hover-3d" style={{ textAlign: 'center', borderTop: '4px solid var(--gray-700)' }}>
+                            <div style={{ width: '80px', height: '80px', margin: '0 auto var(--spacing-4)', borderRadius: '50%', background: 'linear-gradient(135deg, #374151 0%, #1f2937 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 30px rgba(55, 65, 81, 0.3)' }}>
                                 <FaUserShield style={{ color: 'white', fontSize: '2.5rem' }} />
                             </div>
-                            <h3 style={{ marginBottom: 'var(--spacing-3)' }}>Admin</h3>
-                            <p style={{ color: 'var(--gray-600)', marginBottom: 'var(--spacing-4)', fontSize: 'var(--font-size-sm)' }}>
-                                Manage platform, verify users, monitor transactions
-                            </p>
-                            <Link to="/admin/login" className="btn btn-outline" style={{ width: '100%' }}>
-                                Admin Access
-                            </Link>
+                            <h3 style={{ marginBottom: 'var(--spacing-3)' }}>{t('home.admin')}</h3>
+                            <p style={{ color: 'var(--gray-600)', marginBottom: 'var(--spacing-4)', fontSize: 'var(--font-size-sm)' }}>{t('home.adminDesc')}</p>
+                            <Link to="/admin/login" className="btn btn-outline" style={{ width: '100%' }}>{t('nav.adminAccess')}</Link>
                         </div>
                     </div>
                 </div>
@@ -259,10 +174,10 @@ const Home = () => {
                 <div className="container">
                     <div style={{ textAlign: 'center', marginBottom: 'var(--spacing-12)' }}>
                         <h2 className="gradient-text" style={{ fontSize: 'var(--font-size-4xl)', marginBottom: 'var(--spacing-3)' }}>
-                            Featured Seasonal Crops
+                            {t('home.featuredCrops')}
                         </h2>
                         <p style={{ color: 'var(--gray-600)', fontSize: 'var(--font-size-lg)', maxWidth: '600px', margin: '0 auto' }}>
-                            Fresh produce from verified farmers across India
+                            {t('home.featuredCropsDesc')}
                         </p>
                     </div>
 
@@ -299,13 +214,13 @@ const Home = () => {
                                     <div className="crop-card-meta">
                                         <span>📍 {crop.location}</span>
                                     </div>
-                                    <div className="crop-card-price">₹{crop.price}/kg</div>
+                                    <div className="crop-card-price">₹{crop.price}{t('common.perKg')}</div>
                                     <div className="crop-card-footer">
                                         <span className="badge badge-success" style={{ fontSize: 'var(--font-size-xs)' }}>
-                                            ✓ Verified
+                                            {t('home.verified')}
                                         </span>
                                         <Link to="/register" style={{ fontSize: 'var(--font-size-sm)', color: 'var(--primary-green)', fontWeight: 600 }}>
-                                            View Details →
+                                            {t('home.viewDetails')}
                                         </Link>
                                     </div>
                                 </div>
@@ -315,7 +230,7 @@ const Home = () => {
 
                     <div style={{ textAlign: 'center', marginTop: 'var(--spacing-10)' }}>
                         <Link to="/register" className="btn btn-primary btn-lg">
-                            Explore All Crops →
+                            {t('home.exploreAll')}
                         </Link>
                     </div>
                 </div>
@@ -326,80 +241,34 @@ const Home = () => {
                 <div className="container">
                     <div style={{ textAlign: 'center', marginBottom: 'var(--spacing-12)' }}>
                         <h2 className="gradient-text" style={{ fontSize: 'var(--font-size-4xl)', marginBottom: 'var(--spacing-3)' }}>
-                            How AgriConnect Works
+                            {t('home.howItWorks')}
                         </h2>
                         <p style={{ color: 'var(--gray-600)', fontSize: 'var(--font-size-lg)', maxWidth: '600px', margin: '0 auto' }}>
-                            Simple, transparent, and efficient agricultural marketplace
+                            {t('home.howItWorksDesc')}
                         </p>
                     </div>
 
                     <div className="grid grid-cols-4 gap-8">
                         {[
-                            {
-                                step: '01',
-                                title: 'Register & Verify',
-                                description: 'Create your account and get verified by our admin team for secure trading',
-                                icon: FaUserShield,
-                                color: '#10b981',
-                            },
-                            {
-                                step: '02',
-                                title: 'List or Browse',
-                                description: 'Farmers list crops, buyers browse seasonal produce with quality samples',
-                                icon: FaLeaf,
-                                color: '#f59e0b',
-                            },
-                            {
-                                step: '03',
-                                title: 'Negotiate & Deal',
-                                description: 'Fair price negotiation based on quality, quantity, and market rates',
-                                icon: FaHandshake,
-                                color: '#0ea5e9',
-                            },
-                            {
-                                step: '04',
-                                title: 'Track & Deliver',
-                                description: 'Real-time order tracking from farm to delivery with transparency',
-                                icon: FaChartLine,
-                                color: '#8b5cf6',
-                            },
+                            { step: '01', title: t('home.step1Title'), description: t('home.step1Desc'), icon: FaUserShield, color: '#10b981' },
+                            { step: '02', title: t('home.step2Title'), description: t('home.step2Desc'), icon: FaLeaf, color: '#f59e0b' },
+                            { step: '03', title: t('home.step3Title'), description: t('home.step3Desc'), icon: FaHandshake, color: '#0ea5e9' },
+                            { step: '04', title: t('home.step4Title'), description: t('home.step4Desc'), icon: FaChartLine, color: '#8b5cf6' },
                         ].map((item, index) => (
                             <div key={index} className="scale-in" style={{ animationDelay: `${index * 100}ms` }}>
-                                <div
-                                    style={{
-                                        width: '60px',
-                                        height: '60px',
-                                        borderRadius: '50%',
-                                        background: `${item.color}20`,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        marginBottom: 'var(--spacing-4)',
-                                    }}
-                                >
+                                <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: `${item.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 'var(--spacing-4)' }}>
                                     <item.icon style={{ color: item.color, fontSize: '1.8rem' }} />
                                 </div>
-                                <div
-                                    style={{
-                                        fontSize: 'var(--font-size-3xl)',
-                                        fontWeight: 700,
-                                        color: item.color,
-                                        marginBottom: 'var(--spacing-2)',
-                                        opacity: 0.3,
-                                    }}
-                                >
+                                <div style={{ fontSize: 'var(--font-size-3xl)', fontWeight: 700, color: item.color, marginBottom: 'var(--spacing-2)', opacity: 0.3 }}>
                                     {item.step}
                                 </div>
                                 <h4 style={{ marginBottom: 'var(--spacing-2)' }}>{item.title}</h4>
-                                <p style={{ color: 'var(--gray-600)', fontSize: 'var(--font-size-sm)' }}>
-                                    {item.description}
-                                </p>
+                                <p style={{ color: 'var(--gray-600)', fontSize: 'var(--font-size-sm)' }}>{item.description}</p>
                             </div>
                         ))}
                     </div>
                 </div>
             </section>
-
 
             {/* CTA Section */}
             <section
@@ -426,7 +295,7 @@ const Home = () => {
                 />
                 <div className="container" style={{ position: 'relative', zIndex: 1 }}>
                     <h2 style={{ fontSize: 'var(--font-size-4xl)', color: 'white', marginBottom: 'var(--spacing-4)' }}>
-                        Ready to Transform Agriculture?
+                        {t('home.ctaTitle')}
                     </h2>
                     <p style={{
                         color: 'rgba(255, 255, 255, 0.9)',
@@ -435,7 +304,7 @@ const Home = () => {
                         maxWidth: '700px',
                         margin: '0 auto var(--spacing-8)',
                     }}>
-                        Join thousands of farmers, wholesalers, and consumers making agriculture more efficient, transparent, and profitable
+                        {t('home.ctaDesc')}
                     </p>
                     <Link
                         to="/register"
@@ -448,12 +317,10 @@ const Home = () => {
                             boxShadow: '0 10px 40px rgba(245, 158, 11, 0.5)',
                         }}
                     >
-                        Create Your Free Account →
+                        {t('home.ctaButton')}
                     </Link>
                 </div>
             </section>
-
-
 
             {/* Footer */}
             <footer style={{ background: 'var(--gray-900)', color: 'white', padding: '3rem 0 2rem' }}>
@@ -462,13 +329,13 @@ const Home = () => {
                         <div>
                             <h4 style={{ color: 'white', marginBottom: 'var(--spacing-4)' }}>AgriConnect</h4>
                             <p style={{ color: 'var(--gray-400)', fontSize: 'var(--font-size-sm)' }}>
-                                India's leading agricultural marketplace connecting farmers, wholesalers, and consumers.
+                                {t('home.footerTagline')}
                             </p>
                         </div>
                         <div>
-                            <h5 style={{ color: 'white', marginBottom: 'var(--spacing-3)' }}>Platform</h5>
+                            <h5 style={{ color: 'white', marginBottom: 'var(--spacing-3)' }}>{t('home.platform')}</h5>
                             <ul style={{ listStyle: 'none', padding: 0 }}>
-                                {['For Farmers', 'For Wholesalers', 'For Consumers', 'Pricing'].map((item, i) => (
+                                {[t('home.forFarmers'), t('home.forWholesalers'), t('home.forConsumers'), t('home.pricing')].map((item, i) => (
                                     <li key={i} style={{ marginBottom: 'var(--spacing-2)' }}>
                                         <a href="#" style={{ color: 'var(--gray-400)', fontSize: 'var(--font-size-sm)' }}>{item}</a>
                                     </li>
@@ -476,9 +343,9 @@ const Home = () => {
                             </ul>
                         </div>
                         <div>
-                            <h5 style={{ color: 'white', marginBottom: 'var(--spacing-3)' }}>Company</h5>
+                            <h5 style={{ color: 'white', marginBottom: 'var(--spacing-3)' }}>{t('home.company')}</h5>
                             <ul style={{ listStyle: 'none', padding: 0 }}>
-                                {['About Us', 'Contact', 'Careers', 'Blog'].map((item, i) => (
+                                {[t('home.aboutUs'), t('home.contact'), t('home.careers'), t('home.blog')].map((item, i) => (
                                     <li key={i} style={{ marginBottom: 'var(--spacing-2)' }}>
                                         <a href="#" style={{ color: 'var(--gray-400)', fontSize: 'var(--font-size-sm)' }}>{item}</a>
                                     </li>
@@ -486,9 +353,9 @@ const Home = () => {
                             </ul>
                         </div>
                         <div>
-                            <h5 style={{ color: 'white', marginBottom: 'var(--spacing-3)' }}>Legal</h5>
+                            <h5 style={{ color: 'white', marginBottom: 'var(--spacing-3)' }}>{t('home.legal')}</h5>
                             <ul style={{ listStyle: 'none', padding: 0 }}>
-                                {['Privacy Policy', 'Terms of Service', 'Cookie Policy', 'Disclaimer'].map((item, i) => (
+                                {[t('home.privacy'), t('home.terms'), t('home.cookies'), t('home.disclaimer')].map((item, i) => (
                                     <li key={i} style={{ marginBottom: 'var(--spacing-2)' }}>
                                         <a href="#" style={{ color: 'var(--gray-400)', fontSize: 'var(--font-size-sm)' }}>{item}</a>
                                     </li>
@@ -498,7 +365,7 @@ const Home = () => {
                     </div>
                     <div style={{ borderTop: '1px solid var(--gray-800)', paddingTop: 'var(--spacing-6)', textAlign: 'center' }}>
                         <p style={{ color: 'var(--gray-500)', fontSize: 'var(--font-size-sm)' }}>
-                            © 2026 AgriConnect. All rights reserved. Made with ❤️ for Indian Agriculture
+                            {t('home.copyright')}
                         </p>
                     </div>
                 </div>

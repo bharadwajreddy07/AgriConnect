@@ -12,7 +12,13 @@ dotenv.config();
 
 async function cleanDatabase() {
     try {
-        await mongoose.connect(process.env.MONGODB_URI);
+        const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI;
+
+        if (!mongoUri) {
+            throw new Error('No MongoDB connection string found. Set MONGODB_URI or MONGO_URI in your backend .env file.');
+        }
+
+        await mongoose.connect(mongoUri);
         console.log('✅ Connected to MongoDB\n');
 
         console.log('🧹 Starting database cleanup...\n');

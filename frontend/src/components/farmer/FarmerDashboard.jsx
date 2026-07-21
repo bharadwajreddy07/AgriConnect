@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useI18n } from '../../i18n/i18n';
 import api from '../../services/api';
 import { toast } from 'react-toastify';
 import {
@@ -18,6 +19,7 @@ import { formatPrice } from '../../utils/cartUtils';
 
 const FarmerDashboard = () => {
     const { user } = useAuth();
+    const { t } = useI18n();
     const [stats, setStats] = useState({
         totalCrops: 0,
         activeCrops: 0,
@@ -131,14 +133,14 @@ const FarmerDashboard = () => {
         <div style={{ background: 'linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)', minHeight: '100vh', paddingTop: 'var(--spacing-8)', paddingBottom: 'var(--spacing-12)' }}>
             <div className="container">
                 {/* Welcome Section */}
-                <div className="mb-6">
-                    <h1 className="gradient-text">Welcome back, {user.name}!</h1>
+                <div className="mb-6 scale-in">
+                    <h1 className="gradient-text">{t('dashboard.welcomeBack')}, {user.name}!</h1>
                     <p style={{ color: 'var(--gray-600)' }}>Here's what's happening with your farm today</p>
 
                     {!user.isVerified && (
                         <div style={{ marginTop: 'var(--spacing-4)', padding: 'var(--spacing-4)', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid var(--warning)', borderRadius: 'var(--radius-lg)' }}>
                             <p style={{ color: 'var(--warning)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)' }}>
-                                <FaExclamationTriangle /> Your account is pending verification. Some features may be limited until verified.
+                                <FaExclamationTriangle /> {t('dashboard.pendingVerification')}
                             </p>
                         </div>
                     )}
@@ -147,9 +149,9 @@ const FarmerDashboard = () => {
                 {/* Stats Cards */}
                 <div className="grid grid-cols-4 gap-4 mb-6">
                     {/* Total Revenue */}
-                    <div className="card-premium" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: 'white' }}>
+                    <div className="card-premium animate-fade-in" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: 'white' }}>
                         <div className="flex items-center justify-between mb-3">
-                            <p style={{ fontSize: 'var(--font-size-sm)', opacity: 0.9 }}>Total Earnings</p>
+                            <p style={{ fontSize: 'var(--font-size-sm)', opacity: 0.9 }}>{t('dashboard.revenue')}</p>
                             <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255, 255, 255, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <FaRupeeSign />
                             </div>
@@ -163,9 +165,9 @@ const FarmerDashboard = () => {
                     </div>
 
                     {/* Pending Orders */}
-                    <div className="card-premium" style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', color: 'white' }}>
+                    <div className="card-premium animate-fade-in" style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', color: 'white' }}>
                         <div className="flex items-center justify-between mb-3">
-                            <p style={{ fontSize: 'var(--font-size-sm)', opacity: 0.9 }}>Pending Orders</p>
+                            <p style={{ fontSize: 'var(--font-size-sm)', opacity: 0.9 }}>{t('dashboard.pendingOrders')}</p>
                             <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255, 255, 255, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <FaClock />
                             </div>
@@ -181,7 +183,7 @@ const FarmerDashboard = () => {
                     {/* Total Crops */}
                     <Link to="/farmer/crops" className="card-premium hover-3d" style={{ textDecoration: 'none', color: 'inherit' }}>
                         <div className="flex items-center justify-between mb-3">
-                            <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--gray-600)' }}>My Crops</p>
+                            <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--gray-600)' }}>{t('dashboard.totalCrops')}</p>
                             <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--green-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary-green)' }}>
                                 <FaBox />
                             </div>
@@ -190,14 +192,14 @@ const FarmerDashboard = () => {
                             {stats.totalCrops}
                         </p>
                         <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--gray-600)' }}>
-                            {stats.activeCrops} active listings
+                            {stats.activeCrops} {t('dashboard.activeCrops')}
                         </p>
                     </Link>
 
                     {/* Low Stock */}
                     <Link to="/farmer/inventory" className="card-premium hover-3d" style={{ textDecoration: 'none', color: 'inherit' }}>
                         <div className="flex items-center justify-between mb-3">
-                            <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--gray-600)' }}>Low Stock</p>
+                            <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--gray-600)' }}>{t('dashboard.lowStock')}</p>
                             <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--orange-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--warning)' }}>
                                 <FaExclamationTriangle />
                             </div>
@@ -206,7 +208,7 @@ const FarmerDashboard = () => {
                             {stats.lowStockItems}
                         </p>
                         <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--gray-600)' }}>
-                            {stats.outOfStock} out of stock
+                            {stats.outOfStock} {t('dashboard.outOfStock')}
                         </p>
                     </Link>
                 </div>
@@ -216,7 +218,7 @@ const FarmerDashboard = () => {
                     <h3 style={{ marginBottom: 'var(--spacing-4)' }}>Quick Actions</h3>
                     <div className="grid grid-cols-4 gap-3">
                         <Link to="/farmer/crops/new" className="btn btn-primary">
-                            <FaPlus /> List New Crop
+                            <FaPlus /> {t('dashboard.listNewCrop')}
                         </Link>
                         <Link to="/farmer/crops" className="btn btn-outline">
                             <FaBox /> Manage Crops
@@ -234,16 +236,16 @@ const FarmerDashboard = () => {
                     {/* Recent Orders (Consumer + Wholesale) */}
                     <div className="card-premium">
                         <div className="flex items-center justify-between mb-4">
-                            <h3>Recent Orders</h3>
+                            <h3>{t('dashboard.recentOrders')}</h3>
                             <Link to="/farmer/consumer-orders" className="btn btn-sm btn-outline">
-                                View All
+                                {t('common.all')}
                             </Link>
                         </div>
 
                         {recentOrders.length === 0 ? (
                             <div className="text-center" style={{ padding: 'var(--spacing-8)' }}>
                                 <div style={{ fontSize: '3rem', marginBottom: 'var(--spacing-2)' }}>📦</div>
-                                <p style={{ color: 'var(--gray-600)' }}>No orders yet</p>
+                                <p style={{ color: 'var(--gray-600)' }}>{t('dashboard.noOrders')}</p>
                             </div>
                         ) : (
                             <div className="grid gap-3">
@@ -260,7 +262,7 @@ const FarmerDashboard = () => {
                                                 <div style={{ flex: 1 }}>
                                                     <div className="flex items-center gap-2 mb-1">
                                                         <p style={{ fontWeight: 600, fontSize: 'var(--font-size-sm)' }}>
-                                                            Order #{order.orderNumber}
+                                                            {t('dashboard.orderNumber')} #{order.orderNumber}
                                                         </p>
                                                         <span
                                                             className="badge"
@@ -282,7 +284,7 @@ const FarmerDashboard = () => {
                                                     className="badge"
                                                     style={{ background: getStatusBadgeColor(order.status || order.orderStatus), color: 'white', fontSize: 'var(--font-size-xs)' }}
                                                 >
-                                                    {(order.status || order.orderStatus).replace('_', ' ')}
+                                                    {t(`orderStatus.${order.status || order.orderStatus}`, order.status || order.orderStatus)}
                                                 </span>
                                             </div>
                                             <div className="flex items-center justify-between">
@@ -303,48 +305,37 @@ const FarmerDashboard = () => {
                         )}
                     </div>
 
-                    {/* Low Stock Alerts */}
+                    {/* Low Stock Inventory Warnings */}
                     <div className="card-premium">
                         <div className="flex items-center justify-between mb-4">
-                            <h3>Low Stock Alerts</h3>
+                            <h3>{t('dashboard.lowStockItems')}</h3>
                             <Link to="/farmer/inventory" className="btn btn-sm btn-outline">
-                                Manage Stock
+                                Manage
                             </Link>
                         </div>
 
                         {lowStockCrops.length === 0 ? (
                             <div className="text-center" style={{ padding: 'var(--spacing-8)' }}>
-                                <div style={{ fontSize: '3rem', marginBottom: 'var(--spacing-2)' }}>✅</div>
-                                <p style={{ color: 'var(--gray-600)' }}>All items well stocked</p>
+                                <div style={{ fontSize: '3rem', marginBottom: 'var(--spacing-2)' }}>👍</div>
+                                <p style={{ color: 'var(--gray-600)' }}>All items are well stocked!</p>
                             </div>
                         ) : (
                             <div className="grid gap-3">
                                 {lowStockCrops.map((crop) => (
-                                    <div key={crop._id} style={{ padding: 'var(--spacing-3)', background: 'rgba(245, 158, 11, 0.1)', borderRadius: 'var(--radius-md)', border: '1px solid var(--warning)' }}>
-                                        <div className="flex items-center gap-3">
-                                            <div style={{ width: '50px', height: '50px', borderRadius: 'var(--radius-md)', overflow: 'hidden', flexShrink: 0 }}>
-                                                <img
-                                                    src={crop.images?.[0] || '/placeholder.jpg'}
-                                                    alt={crop.name}
-                                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                                />
-                                            </div>
-                                            <div style={{ flex: 1 }}>
-                                                <p style={{ fontWeight: 600, fontSize: 'var(--font-size-sm)' }}>
-                                                    {crop.name}
-                                                </p>
-                                                <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--gray-600)' }}>
-                                                    {crop.category} • {crop.season}
-                                                </p>
-                                            </div>
-                                            <div className="text-right">
-                                                <p style={{ fontWeight: 700, color: 'var(--warning)', fontSize: 'var(--font-size-lg)' }}>
-                                                    {crop.stockQuantity}
-                                                </p>
-                                                <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--gray-600)' }}>
-                                                    {crop.quantity.unit}
-                                                </p>
-                                            </div>
+                                    <div key={crop._id} className="flex items-center justify-between" style={{ padding: 'var(--spacing-3)', background: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: 'var(--radius-md)' }}>
+                                        <div>
+                                            <p style={{ fontWeight: 600, fontSize: 'var(--font-size-sm)' }}>{crop.name}</p>
+                                            <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--gray-600)' }}>
+                                                Expected Price: ₹{crop.expectedPrice} / {crop.priceUnit || 'quintal'}
+                                            </p>
+                                        </div>
+                                        <div style={{ textAlign: 'right' }}>
+                                            <p style={{ fontWeight: 700, color: 'var(--error)' }}>
+                                                {crop.stockQuantity || crop.quantity?.value || 0} {crop.quantity?.unit || 'quintal'} left
+                                            </p>
+                                            <Link to={`/farmer/crops/edit/${crop._id}`} style={{ fontSize: 'var(--font-size-xs)', color: 'var(--primary-green)', fontWeight: 600, textDecoration: 'none' }}>
+                                                Restock
+                                            </Link>
                                         </div>
                                     </div>
                                 ))}

@@ -3,6 +3,14 @@ import User from './models/User.js';
 import Crop from './models/Crop.js';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
+import dns from 'dns';
+
+// Configure public DNS to resolve MongoDB Atlas SRV records
+try {
+    dns.setServers(['8.8.8.8', '8.8.4.4']);
+} catch (e) {
+    console.warn('DNS override failed:', e.message);
+}
 
 dotenv.config();
 
@@ -145,7 +153,7 @@ const getRandomItem = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const getRandomInRange = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 const getRandomPrice = (range) => getRandomInRange(range[0], range[1]);
 
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/agrimart')
+mongoose.connect(process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://localhost:27017/agrimart')
     .then(() => console.log('✅ MongoDB Connected'))
     .catch(err => {
         console.error('❌ MongoDB Connection Error:', err);

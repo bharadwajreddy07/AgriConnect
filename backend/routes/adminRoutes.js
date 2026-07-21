@@ -8,6 +8,7 @@ import {
     getPriceTrends,
     getRecentNegotiations,
     updateUserStatus,
+    getVerificationRequests,
 } from '../controllers/adminController.js';
 import { protect, authorize } from '../middleware/authMiddleware.js';
 
@@ -19,7 +20,9 @@ router.use(authorize('admin'));
 
 // User management
 router.get('/users', getAllUsers);
+router.get('/verification-requests', getVerificationRequests);
 router.put('/users/:id/verify', verifyUser);
+router.put('/verify-user/:id', verifyUser);
 router.put('/users/:id/status', updateUserStatus);
 
 // Crop management

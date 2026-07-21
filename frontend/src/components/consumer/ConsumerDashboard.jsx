@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { FaShoppingCart, FaBox, FaHistory, FaTruck, FaCheckCircle } from 'react-icons/fa';
+import { useI18n } from '../../i18n/i18n';
+import { FaShoppingCart, FaBox, FaHistory, FaTruck, FaCheckCircle, FaStar } from 'react-icons/fa';
 import api from '../../services/api';
-import { toast } from 'react-toastify';
 
 const ConsumerDashboard = () => {
     const { user } = useAuth();
+    const { t } = useI18n();
     const [recentOrders, setRecentOrders] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -27,7 +28,7 @@ const ConsumerDashboard = () => {
 
     const getStatusColor = (status) => {
         switch (status) {
-            case 'delivered': return '#0ea5e9';
+            case 'delivered': return '#10b981';
             case 'shipped': return '#f59e0b';
             case 'processing': return '#8b5cf6';
             case 'pending': return '#6b7280';
@@ -48,12 +49,12 @@ const ConsumerDashboard = () => {
         <div style={{ background: 'linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)', minHeight: '100vh', paddingTop: 'var(--spacing-8)', paddingBottom: 'var(--spacing-12)' }}>
             <div className="container">
                 {/* Welcome Section */}
-                <div className="mb-8">
+                <div className="mb-8 scale-in">
                     <h1 className="gradient-text" style={{ fontSize: 'var(--font-size-4xl)', marginBottom: 'var(--spacing-2)' }}>
-                        Welcome back, {user.name}!
+                        {t('dashboard.welcomeBack')}, {user.name}!
                     </h1>
                     <p style={{ color: 'var(--gray-600)', fontSize: 'var(--font-size-lg)' }}>
-                        Fresh farm produce delivered to your doorstep
+                        {t('dashboard.freshProduce')}
                     </p>
                 </div>
 
@@ -69,12 +70,12 @@ const ConsumerDashboard = () => {
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            boxShadow: '0 10px 30px rgba(16, 185, 129, 0.3)'
+                            boxShadow: 'var(--shadow-glow-green)'
                         }}>
                             <FaShoppingCart style={{ color: 'white', fontSize: '1.5rem' }} />
                         </div>
-                        <h4 style={{ marginBottom: 'var(--spacing-2)' }}>Shop Now</h4>
-                        <p style={{ color: 'var(--gray-600)', fontSize: 'var(--font-size-sm)' }}>Browse fresh products</p>
+                        <h4 style={{ marginBottom: 'var(--spacing-2)' }}>{t('dashboard.shopNow')}</h4>
+                        <p style={{ color: 'var(--gray-600)', fontSize: 'var(--font-size-sm)' }}>{t('dashboard.browseProducts')}</p>
                     </Link>
 
                     <Link to="/consumer/orders" className="card-premium hover-3d text-center" style={{ padding: 'var(--spacing-6)' }}>
@@ -91,8 +92,8 @@ const ConsumerDashboard = () => {
                         }}>
                             <FaBox style={{ color: 'white', fontSize: '1.5rem' }} />
                         </div>
-                        <h4 style={{ marginBottom: 'var(--spacing-2)' }}>My Orders</h4>
-                        <p style={{ color: 'var(--gray-600)', fontSize: 'var(--font-size-sm)' }}>Track your orders</p>
+                        <h4 style={{ marginBottom: 'var(--spacing-2)' }}>{t('dashboard.myOrders')}</h4>
+                        <p style={{ color: 'var(--gray-600)', fontSize: 'var(--font-size-sm)' }}>{t('dashboard.trackOrders')}</p>
                     </Link>
 
                     <Link to="/consumer/cart" className="card-premium hover-3d text-center" style={{ padding: 'var(--spacing-6)' }}>
@@ -105,12 +106,12 @@ const ConsumerDashboard = () => {
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            boxShadow: '0 10px 30px rgba(245, 158, 11, 0.3)'
+                            boxShadow: 'var(--shadow-glow-gold)'
                         }}>
                             <FaShoppingCart style={{ color: 'white', fontSize: '1.5rem' }} />
                         </div>
-                        <h4 style={{ marginBottom: 'var(--spacing-2)' }}>Cart</h4>
-                        <p style={{ color: 'var(--gray-600)', fontSize: 'var(--font-size-sm)' }}>View your cart</p>
+                        <h4 style={{ marginBottom: 'var(--spacing-2)' }}>{t('dashboard.cart')}</h4>
+                        <p style={{ color: 'var(--gray-600)', fontSize: 'var(--font-size-sm)' }}>{t('dashboard.viewCart')}</p>
                     </Link>
                 </div>
 
@@ -118,9 +119,9 @@ const ConsumerDashboard = () => {
                     {/* Recent Orders */}
                     <div className="card-premium col-span-2">
                         <div className="flex items-center justify-between mb-4">
-                            <h3>Recent Orders</h3>
+                            <h3>{t('dashboard.recentOrders')}</h3>
                             <Link to="/consumer/orders" style={{ color: 'var(--primary-green)', fontSize: 'var(--font-size-sm)', fontWeight: 600 }}>
-                                View All →
+                                {t('common.viewMore')} →
                             </Link>
                         </div>
 
@@ -131,9 +132,9 @@ const ConsumerDashboard = () => {
                         ) : recentOrders.length === 0 ? (
                             <div className="text-center" style={{ padding: 'var(--spacing-8)' }}>
                                 <div style={{ fontSize: '3rem', marginBottom: 'var(--spacing-3)' }}>📦</div>
-                                <p style={{ color: 'var(--gray-600)', marginBottom: 'var(--spacing-4)' }}>No orders yet</p>
+                                <p style={{ color: 'var(--gray-600)', marginBottom: 'var(--spacing-4)' }}>{t('dashboard.noOrders')}</p>
                                 <Link to="/consumer/products" className="btn btn-primary">
-                                    Start Shopping
+                                    {t('dashboard.startShopping')}
                                 </Link>
                             </div>
                         ) : (
@@ -151,17 +152,17 @@ const ConsumerDashboard = () => {
                                                     width: '40px',
                                                     height: '40px',
                                                     borderRadius: '50%',
-                                                    background: `${getStatusColor(order.status)}20`,
+                                                    background: `${getStatusColor(order.orderStatus || order.status)}20`,
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'center',
-                                                    color: getStatusColor(order.status)
+                                                    color: getStatusColor(order.orderStatus || order.status)
                                                 }}>
-                                                    {getStatusIcon(order.status)}
+                                                    {getStatusIcon(order.orderStatus || order.status)}
                                                 </div>
                                                 <div style={{ flex: 1 }}>
                                                     <p style={{ fontWeight: 600, marginBottom: 'var(--spacing-1)', color: 'var(--gray-900)' }}>
-                                                        Order #{order._id?.slice(-6)}
+                                                        {t('dashboard.orderNumber')} #{order._id?.slice(-6).toUpperCase()}
                                                     </p>
                                                     <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--gray-600)' }}>
                                                         {order.items?.length || 0} items • ₹{order.totalAmount}
@@ -172,14 +173,14 @@ const ConsumerDashboard = () => {
                                                 style={{
                                                     padding: '4px 12px',
                                                     borderRadius: 'var(--radius-md)',
-                                                    background: `${getStatusColor(order.status)}20`,
-                                                    color: getStatusColor(order.status),
+                                                    background: `${getStatusColor(order.orderStatus || order.status)}20`,
+                                                    color: getStatusColor(order.orderStatus || order.status),
                                                     fontSize: 'var(--font-size-xs)',
                                                     fontWeight: 600,
                                                     textTransform: 'capitalize'
                                                 }}
                                             >
-                                                {order.status}
+                                                {t(`orderStatus.${order.orderStatus || order.status}`, order.orderStatus || order.status)}
                                             </span>
                                         </div>
                                     </Link>
@@ -190,13 +191,13 @@ const ConsumerDashboard = () => {
 
                     {/* Quick Info */}
                     <div className="grid gap-6" style={{ gridTemplateRows: 'auto auto' }}>
-                        <div className="card-premium" style={{ background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)', color: 'white' }}>
+                        <div className="card-premium" style={{ background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)', color: 'white', boxShadow: '0 10px 35px rgba(14, 165, 233, 0.3)' }}>
                             <h4 style={{ color: 'white', marginBottom: 'var(--spacing-2)' }}>🎉 Welcome Offer</h4>
                             <p style={{ fontSize: 'var(--font-size-sm)', opacity: 0.9, marginBottom: 'var(--spacing-3)' }}>
                                 Get ₹100 off on your first order above ₹500
                             </p>
                             <Link to="/consumer/products" className="btn" style={{ background: 'white', color: '#0ea5e9', width: '100%' }}>
-                                Shop Now
+                                {t('dashboard.shopNow')}
                             </Link>
                         </div>
 

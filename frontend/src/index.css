@@ -1463,3 +1463,211 @@ a:hover {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--gray-500);
 }
+
+/* ============================================ */
+/* NAVBAR STYLES */
+/* ============================================ */
+
+.navbar {
+  background: var(--white);
+  box-shadow: var(--shadow-md);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.nav-link {
+  color: var(--gray-700);
+  font-weight: 500;
+  transition: color var(--transition-base);
+  white-space: nowrap;
+}
+
+.nav-link:hover {
+  color: var(--primary-green);
+}
+
+.nav-links-container {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.mobile-menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--gray-700);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: var(--spacing-2);
+}
+
+/* Cart Badge */
+.cart-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: var(--accent-orange);
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* ============================================ */
+/* LANGUAGE SELECTOR */
+/* ============================================ */
+
+.lang-selector {
+  position: relative;
+}
+
+.lang-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--gray-200);
+  background: var(--white);
+  color: var(--gray-700);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.lang-btn:hover {
+  border-color: var(--primary-green);
+  color: var(--primary-green);
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.15);
+}
+
+.lang-btn-text {
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lang-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 220px;
+  background: var(--white);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--gray-100);
+  padding: 0.4rem;
+  z-index: 200;
+  animation: langDropIn 0.2s ease;
+}
+
+@keyframes langDropIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.lang-option {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border-radius: var(--radius-md);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  text-align: left;
+  transition: background 0.15s ease;
+  color: var(--gray-700);
+}
+
+.lang-option:hover {
+  background: var(--emerald-50);
+}
+
+.lang-option-active {
+  background: var(--emerald-50);
+  color: var(--primary-green);
+  font-weight: 600;
+}
+
+.lang-flag {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.lang-native {
+  font-weight: 500;
+  flex: 1;
+}
+
+.lang-english {
+  color: var(--gray-400);
+  font-size: var(--font-size-xs);
+}
+
+.lang-check {
+  color: var(--primary-green);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+/* ============================================ */
+/* MOBILE RESPONSIVE NAVBAR */
+/* ============================================ */
+
+@media (max-width: 768px) {
+  .mobile-menu-btn {
+    display: block;
+  }
+
+  .nav-links-container {
+    display: none;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--white);
+    box-shadow: var(--shadow-lg);
+    padding: var(--spacing-4);
+    gap: var(--spacing-3);
+    border-top: 1px solid var(--gray-100);
+    z-index: 99;
+  }
+
+  .nav-links-container.nav-links-open {
+    display: flex;
+  }
+
+  .lang-dropdown {
+    right: auto;
+    left: 0;
+  }
+
+  .grid.grid-cols-4 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .grid.grid-cols-4 {
+    grid-template-columns: 1fr;
+  }
+}

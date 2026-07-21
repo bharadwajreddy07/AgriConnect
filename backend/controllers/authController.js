@@ -1,6 +1,8 @@
 import User from '../models/User.js';
+import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
+import { findLocalUserByEmail, findLocalUserById, upsertLocalUser } from '../utils/localData.js';
 
 // Generate JWT Token
 const generateToken = (id) => {
@@ -16,15 +18,59 @@ export const register = async (req, res) => {
     try {
         const { name, email, password, phone, role, address, region } = req.body;
 
-        // Check if user already exists
-        const userExists = await User.findOne({ email });
-
-        if (userExists) {
-            return res.status(400).json({ message: 'User already exists with this email' });
+        if (!name || !email || !password || !phone) {
+            return res.status(400).json({ message: 'Please provide name, email, password, and phone number' });
         }
 
-        // Create user
-        const user = await User.create({
+        // If MongoDB is connected, save to DB
+        if (mongoose.connection.readyState === 1) {
+            const userExists = await User.findOne({ email });
+            if (userExists) {
+                return res.status(400).json({ message: 'User already exists with this email' });
+            }
+            const phoneExists = await User.findOne({ phone });
+            if (phoneExists) {
+                return res.status(400).json({ message: 'User already exists with this phone number' });
+            }
+
+            const dbUser = await User.create({
+                name,
+                email,
+                password,
+                phone,
+                role: role || 'consumer',
+                address,
+                region,
+                isVerified: role === 'consumer',
+            });
+
+            // Sync to local data store
+            upsertLocalUser({
+                _id: dbUser._id.toString(),
+                name: dbUser.name,
+                email: dbUser.email,
+                password,
+                phone: dbUser.phone,
+                role: dbUser.role,
+                address: dbUser.address,
+                region: dbUser.region,
+                isVerified: dbUser.isVerified,
+            });
+
+            return res.status(201).json({
+                _id: dbUser._id,
+                name: dbUser.name,
+                email: dbUser.email,
+                phone: dbUser.phone,
+                role: dbUser.role,
+                isVerified: dbUser.isVerified,
+                token: generateToken(dbUser._id),
+            });
+        }
+
+        // Fallback for offline mode
+        const localUser = upsertLocalUser({
+            _id: new mongoose.Types.ObjectId().toString(),
             name,
             email,
             password,
@@ -32,24 +78,24 @@ export const register = async (req, res) => {
             role: role || 'consumer',
             address,
             region,
+            isVerified: role === 'consumer',
         });
 
-        if (user) {
-            res.status(201).json({
-                _id: user._id,
-                name: user.name,
-                email: user.email,
-                phone: user.phone,
-                role: user.role,
-                isVerified: user.isVerified,
-                token: generateToken(user._id),
-            });
-        } else {
-            res.status(400).json({ message: 'Invalid user data' });
-        }
+        res.status(201).json({
+            _id: localUser._id,
+            name: localUser.name,
+            email: localUser.email,
+            phone: localUser.phone,
+            role: localUser.role,
+            isVerified: localUser.isVerified,
+            token: generateToken(localUser._id),
+        });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error('Register error:', error);
+        res.status(500).json({
+            message: 'Registration failed. Please try again later.',
+            error: error.message,
+        });
     }
 };
 
@@ -61,7 +107,29 @@ export const login = async (req, res) => {
         const { email, password } = req.body;
         console.log(`Login attempt for email: ${email}`);
 
-        // Check for user
+        const localUser = findLocalUserByEmail(email);
+
+        if (localUser) {
+            if (localUser.password !== password) {
+                return res.status(401).json({ message: 'Invalid email or password' });
+            }
+
+            return res.json({
+                _id: localUser._id,
+                name: localUser.name,
+                email: localUser.email,
+                phone: localUser.phone,
+                role: localUser.role,
+                isVerified: localUser.isVerified,
+                token: generateToken(localUser._id),
+            });
+        }
+
+        // If offline and not in local data, don't attempt Mongo query to avoid timeout
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(401).json({ message: 'Invalid email or password' });
+        }
+
         const user = await User.findOne({ email }).select('+password');
 
         if (!user) {
@@ -96,6 +164,29 @@ export const login = async (req, res) => {
 // @access  Private
 export const getProfile = async (req, res) => {
     try {
+        const localUser = findLocalUserById(req.user._id);
+
+        if (localUser) {
+            return res.json({
+                _id: localUser._id,
+                name: localUser.name,
+                email: localUser.email,
+                phone: localUser.phone,
+                role: localUser.role,
+                address: localUser.address,
+                region: localUser.region,
+                isVerified: localUser.isVerified,
+                profileImage: '',
+                bankDetails: {},
+                rating: { average: 0, count: 0 },
+                createdAt: new Date().toISOString(),
+            });
+        }
+
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
         const user = await User.findById(req.user._id);
 
         if (user) {
@@ -127,6 +218,33 @@ export const getProfile = async (req, res) => {
 // @access  Private
 export const updateProfile = async (req, res) => {
     try {
+        const localUser = findLocalUserById(req.user._id);
+
+        if (localUser) {
+            localUser.name = req.body.name || localUser.name;
+            localUser.phone = req.body.phone || localUser.phone;
+            localUser.address = req.body.address || localUser.address;
+            localUser.region = req.body.region || localUser.region;
+            localUser.bankDetails = req.body.bankDetails || localUser.bankDetails;
+
+            return res.json({
+                _id: localUser._id,
+                name: localUser.name,
+                email: localUser.email,
+                phone: localUser.phone,
+                role: localUser.role,
+                address: localUser.address,
+                region: localUser.region,
+                isVerified: localUser.isVerified,
+                profileImage: '',
+                bankDetails: localUser.bankDetails || {},
+            });
+        }
+
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
         const user = await User.findById(req.user._id);
 
         if (user) {
@@ -170,6 +288,18 @@ export const forgotPassword = async (req, res) => {
     try {
         const { email } = req.body;
 
+        if (mongoose.connection.readyState !== 1) {
+            const localUser = findLocalUserByEmail(email);
+            if (!localUser) {
+                return res.status(404).json({ message: 'User not found with this email' });
+            }
+            return res.json({
+                success: true,
+                message: 'Password reset link sent to your email (Offline Mock Mode)',
+                resetToken: 'mock-offline-token-' + Date.now(),
+            });
+        }
+
         const user = await User.findOne({ email });
 
         if (!user) {
@@ -212,6 +342,10 @@ export const verifyResetToken = async (req, res) => {
     try {
         const { token } = req.params;
 
+        if (mongoose.connection.readyState !== 1) {
+            return res.json({ success: true, message: 'Token is valid (Offline Mock Mode)' });
+        }
+
         // Verify JWT token
         let decoded;
         try {
@@ -250,6 +384,13 @@ export const resetPassword = async (req, res) => {
 
         if (!password || password.length < 6) {
             return res.status(400).json({ message: 'Password must be at least 6 characters' });
+        }
+
+        if (mongoose.connection.readyState !== 1) {
+            return res.json({
+                success: true,
+                message: 'Password reset successfully (Offline Mock Mode)',
+            });
         }
 
         // Verify JWT token
@@ -304,6 +445,18 @@ export const resetPasswordDirect = async (req, res) => {
 
         if (newPassword.length < 6) {
             return res.status(400).json({ message: 'Password must be at least 6 characters' });
+        }
+
+        if (mongoose.connection.readyState !== 1) {
+            const localUser = findLocalUserByEmail(email);
+            if (!localUser) {
+                return res.status(404).json({ message: 'User not found with this email' });
+            }
+            localUser.password = newPassword;
+            return res.json({
+                success: true,
+                message: 'Password updated successfully (Offline Mock Mode)',
+            });
         }
 
         // Find user by email
